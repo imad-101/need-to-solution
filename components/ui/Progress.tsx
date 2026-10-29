@@ -6,15 +6,12 @@ export function Progress({ value, className, label }: { value: number; className
     <div className={cn("w-full", className)}>
       {label && (
         <div className="mb-1.5 flex items-center justify-between text-xs">
-          <span className="text-white/55">{label}</span>
-          <span className="font-medium tabular-nums text-white/80">{pct}%</span>
+          <span className="text-ink-3">{label}</span>
+          <span className="tabular font-medium text-ink-2">{pct}%</span>
         </div>
       )}
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/8">
-        <div
-          className="h-full rounded-full bg-brand-gradient transition-[width] duration-700 ease-out"
-          style={{ width: `${pct}%` }}
-        />
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-canvas">
+        <div className="h-full rounded-full bg-pine-600 transition-[width] duration-500 ease-out" style={{ width: `${pct}%` }} />
       </div>
     </div>
   );

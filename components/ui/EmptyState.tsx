@@ -15,21 +15,11 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "glass relative flex flex-col items-center justify-center overflow-hidden rounded-3xl px-6 py-14 text-center",
-        className,
-      )}
-    >
-      <div className="pointer-events-none absolute inset-0 bg-dots opacity-30 mask-fade-b" />
-      {icon && (
-        <div className="relative mb-4 flex size-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-brand-200">
-          {icon}
-        </div>
-      )}
-      <h3 className="relative text-base font-semibold text-white">{title}</h3>
-      {description && <p className="relative mt-1.5 max-w-sm text-sm text-white/50">{description}</p>}
-      {action && <div className="relative mt-5">{action}</div>}
+    <div className={cn("card flex flex-col items-center justify-center border-dashed px-6 py-14 text-center", className)}>
+      {icon && <div className="mb-4 flex size-11 items-center justify-center rounded-lg bg-canvas text-ink-2">{icon}</div>}
+      <h3 className="text-base font-medium text-ink">{title}</h3>
+      {description && <p className="mt-1.5 max-w-sm text-sm text-ink-3">{description}</p>}
+      {action && <div className="mt-5">{action}</div>}
     </div>
   );
 }

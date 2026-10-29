@@ -44,36 +44,37 @@ export function initials(name: string) {
     .join("");
 }
 
+/* Status: subtle tinted chips with a solid dot */
 export const statusStyles: Record<ProblemStatus, string> = {
-  open: "bg-emerald-400/10 text-emerald-300 border-emerald-400/20",
-  forming: "bg-sky-400/10 text-sky-300 border-sky-400/20",
-  "in-progress": "bg-amber-400/10 text-amber-300 border-amber-400/20",
-  completed: "bg-brand-400/15 text-brand-200 border-brand-400/30",
+  open: "bg-pine-50 text-pine-700 border-pine-100",
+  forming: "bg-blue-50 text-blue-700 border-blue-50",
+  "in-progress": "bg-amber-50 text-amber-700 border-amber-50",
+  completed: "bg-canvas text-ink-2 border-line",
 };
 
 export const statusDot: Record<ProblemStatus, string> = {
-  open: "bg-emerald-400",
-  forming: "bg-sky-400",
-  "in-progress": "bg-amber-400",
-  completed: "bg-brand-300",
+  open: "bg-pine-500",
+  forming: "bg-blue-600",
+  "in-progress": "bg-amber-600",
+  completed: "bg-ink-3",
 };
 
 export const urgencyStyles: Record<Urgency, string> = {
-  low: "text-white/50",
-  medium: "text-amber-300",
-  high: "text-rose-300",
+  low: "text-ink-3",
+  medium: "text-amber-700",
+  high: "text-red-600",
 };
 
 export const pledgeStyles: Record<PledgeType, string> = {
-  funding: "bg-emerald-400/10 text-emerald-200 border-emerald-400/20",
-  mentorship: "bg-sky-400/10 text-sky-200 border-sky-400/20",
-  resources: "bg-amber-400/10 text-amber-200 border-amber-400/20",
+  funding: "bg-pine-50 text-pine-700 border-pine-100",
+  mentorship: "bg-blue-50 text-blue-700 border-blue-50",
+  resources: "bg-amber-50 text-amber-700 border-amber-50",
 };
 
 export const roleStyles: Record<Role, string> = {
-  community: "bg-emerald-400/10 text-emerald-200 border-emerald-400/20",
-  student: "bg-sky-400/10 text-sky-200 border-sky-400/20",
-  organization: "bg-fuchsia-400/10 text-fuchsia-200 border-fuchsia-400/20",
+  community: "bg-pine-50 text-pine-700 border-pine-100",
+  student: "bg-blue-50 text-blue-700 border-blue-50",
+  organization: "bg-rust-50 text-rust-700 border-rust-50",
 };
 
 export function pluralize(n: number, word: string, plural = `${word}s`) {

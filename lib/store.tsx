@@ -1,16 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useState, type ReactNode } from "react";
 import type {
   Category,
   Credential,
@@ -28,8 +18,13 @@ import { credentialId, uid } from "./utils";
 
 /* ----------------------------- Reducer ----------------------------- */
 
+interface StoreState {
+  data: PlatformState;
+  hydrated: boolean;
+}
+
 type Action =
-  | { type: "HYDRATE"; state: PlatformState }
+  | { type: "HYDRATE"; state: PlatformState | null }
   | { type: "RESET" }
   | { type: "SET_CURRENT"; userId: string | null }
   | { type: "ADD_USER"; user: User }
@@ -40,10 +35,10 @@ type Action =
   | { type: "ADD_PLEDGE"; pledge: Pledge }
   | { type: "ADD_CREDENTIALS"; credentials: Credential[] };
 
-function reducer(state: PlatformState, action: Action): PlatformState {
+function dataReducer(state: PlatformState, action: Action): PlatformState {
   switch (action.type) {
     case "HYDRATE":
-      return action.state;
+      return action.state ?? state;
     case "RESET":
       return { ...seedState, currentUserId: null };
     case "SET_CURRENT":
@@ -56,9 +51,7 @@ function reducer(state: PlatformState, action: Action): PlatformState {
       return {
         ...state,
         problems: state.problems.map((p) =>
-          p.id === action.id
-            ? { ...p, ...(typeof action.patch === "function" ? action.patch(p) : action.patch) }
-            : p,
+          p.id === action.id ? { ...p, ...(typeof action.patch === "function" ? action.patch(p) : action.patch) } : p,
         ),
       };
     case "ADD_TEAM":
@@ -67,9 +60,7 @@ function reducer(state: PlatformState, action: Action): PlatformState {
       return {
         ...state,
         teams: state.teams.map((t) =>
-          t.id === action.id
-            ? { ...t, ...(typeof action.patch === "function" ? action.patch(t) : action.patch) }
-            : t,
+          t.id === action.id ? { ...t, ...(typeof action.patch === "function" ? action.patch(t) : action.patch) } : t,
         ),
       };
     case "ADD_PLEDGE":
@@ -79,6 +70,13 @@ function reducer(state: PlatformState, action: Action): PlatformState {
     default:
       return state;
   }
+}
+
+function reducer(state: StoreState, action: Action): StoreState {
+  return {
+    data: dataReducer(state.data, action),
+    hydrated: state.hydrated || action.type === "HYDRATE",
+  };
 }
 
 /* ----------------------------- Toasts ----------------------------- */
@@ -138,7 +136,6 @@ interface PlatformContextValue {
   toggleMilestone: (problemId: string, milestoneId: string) => void;
   startProject: (problemId: string) => void;
   completeProject: (problemId: string) => void;
-  /* selectors */
   userById: (id: string) => User | undefined;
   problemById: (id: string) => Problem | undefined;
   teamsForProblem: (problemId: string) => Team[];
@@ -153,38 +150,37 @@ interface PlatformContextValue {
 
 const PlatformContext = createContext<PlatformContextValue | null>(null);
 
+function readStorage(): PlatformState | null {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PlatformState;
+    return parsed && Array.isArray(parsed.problems) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 export function PlatformProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, seedState);
-  const [hydrated, setHydrated] = useState(false);
+  const [{ data, hydrated }, dispatch] = useReducer(reducer, { data: seedState, hydrated: false });
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [authOpen, setAuthOpen] = useState(false);
   const [authRole, setAuthRole] = useState<Role | null>(null);
-  const stateRef = useRef(state);
-  stateRef.current = state;
 
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as PlatformState;
-        if (parsed && Array.isArray(parsed.problems)) {
-          dispatch({ type: "HYDRATE", state: parsed });
-        }
-      }
-    } catch {
-      /* ignore corrupted storage */
-    }
-    setHydrated(true);
-  }, []);
-
+  // Persist after hydration. Declared before the hydrate effect so the first
+  // run (hydrated === false) never overwrites stored data with the seed.
   useEffect(() => {
     if (!hydrated) return;
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch {
       /* storage may be unavailable */
     }
-  }, [state, hydrated]);
+  }, [data, hydrated]);
+
+  useEffect(() => {
+    dispatch({ type: "HYDRATE", state: readStorage() });
+  }, []);
 
   const notify = useCallback((toast: Omit<Toast, "id">) => {
     const id = uid("toast");
@@ -192,9 +188,7 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
     window.setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4200);
   }, []);
 
-  const dismissToast = useCallback((id: string) => {
-    setToasts((t) => t.filter((x) => x.id !== id));
-  }, []);
+  const dismissToast = useCallback((id: string) => setToasts((t) => t.filter((x) => x.id !== id)), []);
 
   const openAuth = useCallback((role?: Role) => {
     setAuthRole(role ?? null);
@@ -202,76 +196,42 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
   }, []);
   const closeAuth = useCallback(() => setAuthOpen(false), []);
 
-  const currentUser = useMemo(
-    () => state.users.find((u) => u.id === state.currentUserId) ?? null,
-    [state.users, state.currentUserId],
-  );
+  const value = useMemo<PlatformContextValue>(() => {
+    const s = data;
+    const currentUser = s.users.find((u) => u.id === s.currentUserId) ?? null;
 
-  /* ---------- selectors ---------- */
-  const userById = useCallback((id: string) => stateRef.current.users.find((u) => u.id === id), []);
-  const problemById = useCallback((id: string) => stateRef.current.problems.find((p) => p.id === id), []);
-  const teamsForProblem = useCallback(
-    (problemId: string) => stateRef.current.teams.filter((t) => t.problemId === problemId),
-    [],
-  );
-  const pledgesForProblem = useCallback(
-    (problemId: string) => stateRef.current.pledges.filter((p) => p.problemId === problemId),
-    [],
-  );
-  const credentialsForUser = useCallback(
-    (userId: string) => stateRef.current.credentials.filter((c) => c.userId === userId),
-    [],
-  );
-  const teamsForUser = useCallback(
-    (userId: string) => stateRef.current.teams.filter((t) => t.memberIds.includes(userId)),
-    [],
-  );
-  const problemsForUser = useCallback(
-    (userId: string) => stateRef.current.problems.filter((p) => p.submittedBy === userId),
-    [],
-  );
-  const pledgesForOrg = useCallback(
-    (orgId: string) => stateRef.current.pledges.filter((p) => p.orgId === orgId),
-    [],
-  );
-  const isTeamMember = useCallback(
-    (problemId: string, userId: string) =>
-      stateRef.current.teams.some((t) => t.problemId === problemId && t.memberIds.includes(userId)),
-    [],
-  );
+    /* ---------- selectors ---------- */
+    const userById = (id: string) => s.users.find((u) => u.id === id);
+    const problemById = (id: string) => s.problems.find((p) => p.id === id);
+    const teamsForProblem = (problemId: string) => s.teams.filter((t) => t.problemId === problemId);
+    const pledgesForProblem = (problemId: string) => s.pledges.filter((p) => p.problemId === problemId);
+    const credentialsForUser = (userId: string) => s.credentials.filter((c) => c.userId === userId);
+    const teamsForUser = (userId: string) => s.teams.filter((t) => t.memberIds.includes(userId));
+    const problemsForUser = (userId: string) => s.problems.filter((p) => p.submittedBy === userId);
+    const pledgesForOrg = (orgId: string) => s.pledges.filter((p) => p.orgId === orgId);
+    const isTeamMember = (problemId: string, userId: string) =>
+      s.teams.some((t) => t.problemId === problemId && t.memberIds.includes(userId));
+    const canAct = (role: Role) => !!currentUser && currentUser.role === role;
 
-  const requireUser = useCallback(
-    (role?: Role): User | null => {
-      const user = stateRef.current.users.find((u) => u.id === stateRef.current.currentUserId) ?? null;
-      if (!user) {
+    const requireUser = (role?: Role): User | null => {
+      if (!currentUser) {
         openAuth(role);
         return null;
       }
-      if (role && user.role !== role) {
+      if (role && currentUser.role !== role) {
         notify({
           title: `This action is for ${role === "organization" ? "organizations" : role + "s"}`,
-          description: `You are signed in as a ${user.role === "organization" ? "n organization" : user.role}. Switch account to continue.`,
+          description: `You are signed in as ${currentUser.role === "organization" ? "an organization" : "a " + currentUser.role}. Switch account to continue.`,
           tone: "info",
         });
         return null;
       }
-      return user;
-    },
-    [notify, openAuth],
-  );
+      return currentUser;
+    };
 
-  const canAct = useCallback(
-    (role: Role) => {
-      const user = stateRef.current.users.find((u) => u.id === stateRef.current.currentUserId);
-      return !!user && user.role === role;
-    },
-    [],
-  );
-
-  /* ---------- auth ---------- */
-  const signIn = useCallback(
-    (input: SignInInput) => {
-      const existing = stateRef.current.users.find(
+    /* ---------- auth ---------- */
+    const signIn = (input: SignInInput) => {
+      const existing = s.users.find(
         (u) => u.name.trim().toLowerCase() === input.name.trim().toLowerCase() && u.role === input.role,
       );
       if (existing) {
@@ -286,15 +246,11 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
         role: input.role,
         headline:
           input.headline?.trim() ||
-          (input.role === "community"
-            ? "Community member"
-            : input.role === "student"
-              ? "Student"
-              : "Organization"),
+          (input.role === "community" ? "Community member" : input.role === "student" ? "Student" : "Organization"),
         location: input.location?.trim() || "Remote",
         skills: input.skills ?? [],
         avatarHue: Math.floor(Math.random() * 360),
-        orgType: input.role === "organization" ? input.orgType ?? "NGO" : undefined,
+        orgType: input.role === "organization" ? (input.orgType ?? "NGO") : undefined,
         joinedAt: new Date().toISOString(),
       };
       dispatch({ type: "ADD_USER", user });
@@ -302,34 +258,28 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
       setAuthOpen(false);
       notify({ title: `Welcome, ${user.name.split(" ")[0]}`, description: "Your account is ready.", tone: "success" });
       return user;
-    },
-    [notify],
-  );
+    };
 
-  const signInAs = useCallback(
-    (userId: string) => {
-      const user = stateRef.current.users.find((u) => u.id === userId);
+    const signInAs = (userId: string) => {
+      const user = userById(userId);
       if (!user) return;
       dispatch({ type: "SET_CURRENT", userId });
       setAuthOpen(false);
       notify({ title: `Signed in as ${user.name}`, tone: "success" });
-    },
-    [notify],
-  );
+    };
 
-  const signOut = useCallback(() => {
-    dispatch({ type: "SET_CURRENT", userId: null });
-    notify({ title: "Signed out", tone: "info" });
-  }, [notify]);
+    const signOut = () => {
+      dispatch({ type: "SET_CURRENT", userId: null });
+      notify({ title: "Signed out", tone: "info" });
+    };
 
-  const resetDemo = useCallback(() => {
-    dispatch({ type: "RESET" });
-    notify({ title: "Demo data reset", tone: "info" });
-  }, [notify]);
+    const resetDemo = () => {
+      dispatch({ type: "RESET" });
+      notify({ title: "Demo data reset", tone: "info" });
+    };
 
-  /* ---------- problems ---------- */
-  const submitProblem = useCallback(
-    (input: SubmitProblemInput) => {
+    /* ---------- problems ---------- */
+    const submitProblem = (input: SubmitProblemInput) => {
       const user = requireUser("community");
       if (!user) return null;
       const problem: Problem = {
@@ -345,12 +295,9 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "ADD_PROBLEM", problem });
       notify({ title: "Problem published", description: "Students and organizations can now find it.", tone: "success" });
       return problem;
-    },
-    [notify, requireUser],
-  );
+    };
 
-  const toggleUpvote = useCallback(
-    (problemId: string) => {
+    const toggleUpvote = (problemId: string) => {
       const user = requireUser();
       if (!user) return;
       dispatch({
@@ -360,13 +307,10 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
           upvotes: p.upvotes.includes(user.id) ? p.upvotes.filter((x) => x !== user.id) : [...p.upvotes, user.id],
         }),
       });
-    },
-    [requireUser],
-  );
+    };
 
-  /* ---------- teams ---------- */
-  const createTeam = useCallback(
-    (problemId: string, input: { name: string; pitch: string; openRoles: string[]; myRole: string }) => {
+    /* ---------- teams ---------- */
+    const createTeam = (problemId: string, input: { name: string; pitch: string; openRoles: string[]; myRole: string }) => {
       const user = requireUser("student");
       if (!user) return null;
       const team: Team = {
@@ -381,22 +325,15 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
         createdAt: new Date().toISOString(),
       };
       dispatch({ type: "ADD_TEAM", team });
-      dispatch({
-        type: "UPDATE_PROBLEM",
-        id: problemId,
-        patch: (p) => (p.status === "open" ? { status: "forming" } : {}),
-      });
+      dispatch({ type: "UPDATE_PROBLEM", id: problemId, patch: (p) => (p.status === "open" ? { status: "forming" } : {}) });
       notify({ title: `${team.name} created`, description: "Open roles are now visible to other students.", tone: "success" });
       return team;
-    },
-    [notify, requireUser],
-  );
+    };
 
-  const joinTeam = useCallback(
-    (teamId: string, role: string) => {
+    const joinTeam = (teamId: string, role: string) => {
       const user = requireUser("student");
       if (!user) return;
-      const team = stateRef.current.teams.find((t) => t.id === teamId);
+      const team = s.teams.find((t) => t.id === teamId);
       if (!team || team.memberIds.includes(user.id)) return;
       dispatch({
         type: "UPDATE_TEAM",
@@ -408,15 +345,12 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
         }),
       });
       notify({ title: `You joined ${team.name}`, description: `Role: ${role}`, tone: "success" });
-    },
-    [notify, requireUser],
-  );
+    };
 
-  const leaveTeam = useCallback(
-    (teamId: string) => {
+    const leaveTeam = (teamId: string) => {
       const user = requireUser("student");
       if (!user) return;
-      const team = stateRef.current.teams.find((t) => t.id === teamId);
+      const team = s.teams.find((t) => t.id === teamId);
       if (!team) return;
       if (team.leadId === user.id) {
         notify({ title: "Team leads can't leave", description: "Hand over the lead role first.", tone: "error" });
@@ -437,13 +371,10 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
         },
       });
       notify({ title: `You left ${team.name}`, tone: "info" });
-    },
-    [notify, requireUser],
-  );
+    };
 
-  /* ---------- pledges ---------- */
-  const pledgeSupport = useCallback(
-    (problemId: string, input: { type: PledgeType; amount?: number; details: string }) => {
+    /* ---------- pledges ---------- */
+    const pledgeSupport = (problemId: string, input: { type: PledgeType; amount?: number; details: string }) => {
       const user = requireUser("organization");
       if (!user) return null;
       const pledge: Pledge = {
@@ -458,13 +389,10 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "ADD_PLEDGE", pledge });
       notify({ title: "Support pledged", description: "The team and the community have been notified.", tone: "success" });
       return pledge;
-    },
-    [notify, requireUser],
-  );
+    };
 
-  /* ---------- progress ---------- */
-  const postUpdate = useCallback(
-    (problemId: string, text: string) => {
+    /* ---------- progress ---------- */
+    const postUpdate = (problemId: string, text: string) => {
       const user = requireUser();
       if (!user || !text.trim()) return;
       dispatch({
@@ -475,12 +403,9 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
         }),
       });
       notify({ title: "Update posted", tone: "success" });
-    },
-    [notify, requireUser],
-  );
+    };
 
-  const addMilestone = useCallback(
-    (problemId: string, title: string) => {
+    const addMilestone = (problemId: string, title: string) => {
       const user = requireUser();
       if (!user || !title.trim()) return;
       dispatch({
@@ -488,59 +413,48 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
         id: problemId,
         patch: (p) => ({ milestones: [...p.milestones, { id: uid("m"), title: title.trim(), done: false }] }),
       });
-    },
-    [requireUser],
-  );
+    };
 
-  const toggleMilestone = useCallback(
-    (problemId: string, milestoneId: string) => {
+    const toggleMilestone = (problemId: string, milestoneId: string) => {
       const user = requireUser();
       if (!user) return;
       dispatch({
         type: "UPDATE_PROBLEM",
         id: problemId,
-        patch: (p) => ({
-          milestones: p.milestones.map((m) => (m.id === milestoneId ? { ...m, done: !m.done } : m)),
-        }),
+        patch: (p) => ({ milestones: p.milestones.map((m) => (m.id === milestoneId ? { ...m, done: !m.done } : m)) }),
       });
-    },
-    [requireUser],
-  );
+    };
 
-  const startProject = useCallback(
-    (problemId: string) => {
+    const startProject = (problemId: string) => {
       const user = requireUser("student");
       if (!user) return;
       dispatch({ type: "UPDATE_PROBLEM", id: problemId, patch: { status: "in-progress" } });
       notify({ title: "Project started", description: "Keep the community posted with updates.", tone: "success" });
-    },
-    [notify, requireUser],
-  );
+    };
 
-  const completeProject = useCallback(
-    (problemId: string) => {
+    const completeProject = (problemId: string) => {
       const user = requireUser();
       if (!user) return;
-      const s = stateRef.current;
-      const problem = s.problems.find((p) => p.id === problemId);
+      const problem = problemById(problemId);
       if (!problem) return;
-      const teams = s.teams.filter((t) => t.problemId === problemId);
-      const orgs = s.pledges.filter((p) => p.problemId === problemId).map((p) => p.orgId);
+      const teams = teamsForProblem(problemId);
+      const orgs = pledgesForProblem(problemId).map((p) => p.orgId);
       const verifiedBy = orgs[0] ?? (user.role === "organization" ? user.id : "platform");
       const issuedAt = new Date().toISOString();
-      const credentials: Credential[] = [];
       const already = new Set(s.credentials.filter((c) => c.problemId === problemId).map((c) => c.userId));
+      const credentials: Credential[] = [];
       for (const team of teams) {
         for (const memberId of team.memberIds) {
           if (already.has(memberId)) continue;
-          const member = s.users.find((u) => u.id === memberId);
+          const member = userById(memberId);
+          const skills = (member?.skills ?? []).slice(0, 3);
           credentials.push({
             id: credentialId(),
             userId: memberId,
             problemId,
             teamId: team.id,
             role: team.memberRoles[memberId] ?? "Contributor",
-            skills: (member?.skills ?? []).slice(0, 3).length ? (member?.skills ?? []).slice(0, 3) : problem.needs.slice(0, 2),
+            skills: skills.length ? skills : problem.needs.slice(0, 2),
             issuedAt,
             verifiedBy,
             hours: 60 + Math.floor(Math.random() * 90),
@@ -571,13 +485,10 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
         description: `${credentials.length} verified credential${credentials.length === 1 ? "" : "s"} issued.`,
         tone: "success",
       });
-    },
-    [notify, requireUser],
-  );
+    };
 
-  const value = useMemo<PlatformContextValue>(
-    () => ({
-      state,
+    return {
+      state: s,
       hydrated,
       currentUser,
       toasts,
@@ -612,45 +523,8 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
       pledgesForOrg,
       canAct,
       isTeamMember,
-    }),
-    [
-      state,
-      hydrated,
-      currentUser,
-      toasts,
-      authOpen,
-      authRole,
-      openAuth,
-      closeAuth,
-      dismissToast,
-      notify,
-      signIn,
-      signInAs,
-      signOut,
-      resetDemo,
-      submitProblem,
-      toggleUpvote,
-      createTeam,
-      joinTeam,
-      leaveTeam,
-      pledgeSupport,
-      postUpdate,
-      addMilestone,
-      toggleMilestone,
-      startProject,
-      completeProject,
-      userById,
-      problemById,
-      teamsForProblem,
-      pledgesForProblem,
-      credentialsForUser,
-      teamsForUser,
-      problemsForUser,
-      pledgesForOrg,
-      canAct,
-      isTeamMember,
-    ],
-  );
+    };
+  }, [data, hydrated, toasts, authOpen, authRole, openAuth, closeAuth, dismissToast, notify]);
 
   return <PlatformContext.Provider value={value}>{children}</PlatformContext.Provider>;
 }

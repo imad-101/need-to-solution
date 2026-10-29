@@ -26,16 +26,13 @@ export function Avatar({
     <span
       title={user.name}
       className={cn(
-        "inline-flex shrink-0 select-none items-center justify-center font-semibold tracking-tight text-white",
-        isOrg ? "rounded-xl" : "rounded-full",
+        "inline-flex shrink-0 select-none items-center justify-center font-medium tracking-tight text-white",
+        isOrg ? "rounded-md" : "rounded-full",
         sizes[size],
-        ring && "ring-2 ring-ink",
+        ring && "ring-2 ring-surface",
         className,
       )}
-      style={{
-        background: `linear-gradient(135deg, hsl(${hue} 75% 55%), hsl(${(hue + 50) % 360} 80% 45%))`,
-        boxShadow: `0 6px 18px -8px hsl(${hue} 80% 55% / 0.7)`,
-      }}
+      style={{ background: `hsl(${hue} 28% 42%)` }}
     >
       {initials(user.name)}
     </span>
@@ -53,12 +50,7 @@ export function AvatarStack({ users, max = 4, size = "sm" }: { users: User[]; ma
         </span>
       ))}
       {rest > 0 && (
-        <span
-          className={cn(
-            "-ml-2 inline-flex items-center justify-center rounded-full bg-white/10 font-medium text-white/80 ring-2 ring-ink",
-            sizes[size],
-          )}
-        >
+        <span className={cn("-ml-2 inline-flex items-center justify-center rounded-full bg-canvas font-medium text-ink-2 ring-2 ring-surface", sizes[size])}>
           +{rest}
         </span>
       )}

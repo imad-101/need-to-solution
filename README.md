@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NeedToSolution
 
-## Getting Started
+A platform where communities post real problems for students and organizations to solve.
 
-First, run the development server:
+- Community members submit problems.
+- Students form teams around real challenges.
+- Organizations provide funding, mentorship, or resources.
+- Contributors earn verified project experience.
+
+Instead of asking people to search for opportunities, the platform generates opportunities from problems that need solving.
+
+## Run it
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## What's inside
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Route | Purpose |
+| --- | --- |
+| `/` | Landing page: how it works, the village health example, what's distinctive, live problems, role CTAs |
+| `/problems` | Browse and filter problems (search, category, status, urgency, open roles) |
+| `/problems/[id]` | Problem detail: team formation, joining roles, pledges, milestones, updates, completion |
+| `/submit` | Community members publish a problem |
+| `/teams` | Teams recruiting for open roles |
+| `/organizations` | Ways to support, projects needing backing, partner wall |
+| `/dashboard` | Role-specific dashboard (community, student, organization) |
+| `/contributors/[id]` | Public profile with verified credentials |
+| `/verify/[id]` | Public credential verification |
+| `/how-it-works` | Full guide for each role |
 
-## Learn More
+## How the data works
 
-To learn more about Next.js, take a look at the following resources:
+There is no backend. `lib/store.tsx` holds the whole platform state in a React reducer, seeded from `lib/seed.ts`, and persists it to `localStorage` under a versioned key. Sign in with a demo account (user menu → "Try a demo account") or create a new one. "Reset demo data" in the user menu restores the seed.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Project lifecycle: `open` → `forming` (first team created) → `in-progress` (team lead starts) → `completed` (lead, submitter or a supporting org marks complete). Completion issues a verified credential to every team member, recording the role, skills, hours and the verifying organization.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Stack
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Next.js 16 (App Router, Cache Components), React 19, Tailwind CSS v4, lucide-react. No other runtime dependencies.

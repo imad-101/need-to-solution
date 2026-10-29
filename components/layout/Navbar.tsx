@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { ChevronDown, LayoutDashboard, LogOut, Menu, Plus, RefreshCcw, UserRound, X } from "lucide-react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { ChevronDown, LayoutDashboard, LogOut, Menu, RefreshCcw, UserRound, X } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
@@ -19,24 +19,10 @@ const links = [
 ];
 
 export function Navbar() {
-  const pathname = usePathname();
   const { currentUser, openAuth, signOut, resetDemo, hydrated } = usePlatform();
-  const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
   const userRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useEffect(() => {
-    setMenuOpen(false);
-    setUserOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     if (!userOpen) return;
@@ -47,130 +33,156 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", onDown);
   }, [userOpen]);
 
+  const closeAll = () => {
+    setMenuOpen(false);
+    setUserOpen(false);
+  };
+
   return (
-    <header
-      className={cn(
-        "fixed inset-x-0 top-0 z-50 transition-all duration-300",
-        scrolled ? "py-2" : "py-4",
-      )}
-    >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <nav
-          className={cn(
-            "flex items-center justify-between gap-4 rounded-2xl px-3 py-2 transition-all duration-300 sm:px-4",
-            scrolled || menuOpen ? "glass-strong shadow-[0_10px_40px_-20px_rgba(0,0,0,0.8)]" : "border border-transparent",
-          )}
-        >
+    <header className="sticky top-0 z-50 border-b border-line bg-paper/95 backdrop-blur-sm">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6">
+        <div className="flex items-center gap-10">
           <Logo />
-
-          <ul className="hidden items-center gap-1 lg:flex">
-            {links.map((l) => {
-              const active = pathname === l.href || pathname.startsWith(l.href + "/");
-              return (
-                <li key={l.href}>
-                  <Link
-                    href={l.href}
-                    className={cn(
-                      "relative rounded-lg px-3.5 py-2 text-sm font-medium transition-colors",
-                      active ? "text-white" : "text-white/60 hover:text-white",
-                    )}
-                  >
-                    {l.label}
-                    {active && (
-                      <span className="absolute inset-x-3 -bottom-0.5 h-px bg-gradient-to-r from-transparent via-magenta-400 to-transparent" />
-                    )}
-                  </Link>
-                </li>
-              );
-            })}
+          <ul className="hidden items-center gap-7 lg:flex">
+            <Suspense fallback={<NavLinks pathname={null} onNavigate={closeAll} />}>
+              <ActiveNavLinks onNavigate={closeAll} />
+            </Suspense>
           </ul>
+        </div>
 
-          <div className="flex items-center gap-2">
-            <Button href="/submit" size="sm" variant="outline" className="hidden sm:inline-flex">
-              <Plus className="size-4" />
+        <div className="flex items-center gap-2">
+          <span className="hidden sm:block">
+            <Button href="/submit" size="sm" variant="outline">
               Submit a problem
             </Button>
+          </span>
 
-            {hydrated && currentUser ? (
-              <div className="relative" ref={userRef}>
-                <button
-                  onClick={() => setUserOpen((v) => !v)}
-                  className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] py-1 pl-1 pr-2 transition hover:border-white/20"
-                >
-                  <Avatar user={currentUser} size="sm" />
-                  <span className="hidden max-w-[120px] truncate text-sm font-medium text-white md:block">
-                    {currentUser.name.split(" ")[0]}
-                  </span>
-                  <ChevronDown className={cn("size-3.5 text-white/50 transition", userOpen && "rotate-180")} />
-                </button>
-                {userOpen && (
-                  <div className="glass-strong absolute right-0 mt-2 w-64 overflow-hidden rounded-2xl p-1.5 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.9)] animate-fade-up">
-                    <div className="px-3 py-2.5">
-                      <p className="truncate text-sm font-medium text-white">{currentUser.name}</p>
-                      <p className="text-xs text-white/50">{ROLE_LABEL[currentUser.role]}</p>
-                    </div>
-                    <div className="my-1 h-px bg-white/8" />
-                    <MenuItem href="/dashboard" icon={<LayoutDashboard className="size-4" />}>
-                      Dashboard
-                    </MenuItem>
-                    <MenuItem href={`/contributors/${currentUser.id}`} icon={<UserRound className="size-4" />}>
-                      My profile
-                    </MenuItem>
-                    <MenuItem onClick={() => openAuth()} icon={<RefreshCcw className="size-4" />}>
-                      Switch account
-                    </MenuItem>
-                    <div className="my-1 h-px bg-white/8" />
-                    <MenuItem onClick={signOut} icon={<LogOut className="size-4" />}>
-                      Sign out
-                    </MenuItem>
-                    <MenuItem onClick={resetDemo} icon={<RefreshCcw className="size-4" />} subtle>
-                      Reset demo data
-                    </MenuItem>
+          {hydrated && currentUser ? (
+            <div className="relative" ref={userRef}>
+              <button
+                onClick={() => setUserOpen((v) => !v)}
+                className="flex items-center gap-2 rounded-md py-1 pl-1 pr-2 transition hover:bg-canvas"
+              >
+                <Avatar user={currentUser} size="sm" />
+                <span className="hidden max-w-[120px] truncate text-sm font-medium text-ink md:block">{currentUser.name.split(" ")[0]}</span>
+                <ChevronDown className={cn("size-3.5 text-ink-3 transition", userOpen && "rotate-180")} />
+              </button>
+              {userOpen && (
+                <div className="card absolute right-0 mt-2 w-64 overflow-hidden p-1.5 shadow-[0_16px_40px_-16px_rgba(27,27,25,0.3)] animate-fade-in">
+                  <div className="px-3 py-2.5">
+                    <p className="truncate text-sm font-medium text-ink">{currentUser.name}</p>
+                    <p className="text-xs text-ink-3">{ROLE_LABEL[currentUser.role]}</p>
                   </div>
-                )}
-              </div>
-            ) : (
-              <Button size="sm" onClick={() => openAuth()} className="hidden sm:inline-flex">
+                  <div className="my-1 h-px bg-line" />
+                  <MenuItem href="/dashboard" onClick={closeAll} icon={<LayoutDashboard className="size-4" />}>
+                    Dashboard
+                  </MenuItem>
+                  <MenuItem href={`/contributors/${currentUser.id}`} onClick={closeAll} icon={<UserRound className="size-4" />}>
+                    My profile
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      closeAll();
+                      openAuth();
+                    }}
+                    icon={<RefreshCcw className="size-4" />}
+                  >
+                    Switch account
+                  </MenuItem>
+                  <div className="my-1 h-px bg-line" />
+                  <MenuItem
+                    onClick={() => {
+                      closeAll();
+                      signOut();
+                    }}
+                    icon={<LogOut className="size-4" />}
+                  >
+                    Sign out
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      closeAll();
+                      resetDemo();
+                    }}
+                    icon={<RefreshCcw className="size-4" />}
+                    subtle
+                  >
+                    Reset demo data
+                  </MenuItem>
+                </div>
+              )}
+            </div>
+          ) : (
+            <span className="hidden sm:block">
+              <Button size="sm" onClick={() => openAuth()}>
+                Sign in
+              </Button>
+            </span>
+          )}
+
+          <button onClick={() => setMenuOpen((v) => !v)} className="rounded-md p-2 text-ink-2 hover:bg-canvas lg:hidden" aria-label="Toggle menu">
+            {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
+        </div>
+      </div>
+
+      {menuOpen && (
+        <div className="border-t border-line bg-surface px-4 py-3 lg:hidden">
+          {links.map((l) => (
+            <Link key={l.href} href={l.href} onClick={closeAll} className="block rounded-md px-3 py-2.5 text-sm font-medium text-ink hover:bg-canvas">
+              {l.label}
+            </Link>
+          ))}
+          <div className="mt-3 flex gap-2 border-t border-line pt-3">
+            <Link href="/submit" onClick={closeAll} className="inline-flex h-9 flex-1 items-center justify-center rounded-md border border-line-strong text-sm font-medium text-ink">
+              Submit a problem
+            </Link>
+            {!currentUser && (
+              <Button
+                size="sm"
+                className="flex-1"
+                onClick={() => {
+                  closeAll();
+                  openAuth();
+                }}
+              >
                 Sign in
               </Button>
             )}
-
-            <button
-              onClick={() => setMenuOpen((v) => !v)}
-              className="rounded-lg p-2 text-white/70 hover:bg-white/5 hover:text-white lg:hidden"
-              aria-label="Toggle menu"
-            >
-              {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-            </button>
           </div>
-        </nav>
-
-        {menuOpen && (
-          <div className="glass-strong mt-2 rounded-2xl p-2 animate-fade-up lg:hidden">
-            {links.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className="block rounded-xl px-4 py-3 text-sm font-medium text-white/80 hover:bg-white/5 hover:text-white"
-              >
-                {l.label}
-              </Link>
-            ))}
-            <div className="mt-2 flex gap-2 p-2">
-              <Button href="/submit" size="sm" variant="outline" className="flex-1">
-                <Plus className="size-4" />
-                Submit a problem
-              </Button>
-              {!currentUser && (
-                <Button size="sm" className="flex-1" onClick={() => openAuth()}>
-                  Sign in
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </header>
+  );
+}
+
+function ActiveNavLinks({ onNavigate }: { onNavigate: () => void }) {
+  const pathname = usePathname();
+  return <NavLinks pathname={pathname} onNavigate={onNavigate} />;
+}
+
+function NavLinks({ pathname, onNavigate }: { pathname: string | null; onNavigate: () => void }) {
+  return (
+    <>
+      {links.map((l) => {
+        const active = !!pathname && (pathname === l.href || pathname.startsWith(l.href + "/"));
+        return (
+          <li key={l.href}>
+            <Link
+              href={l.href}
+              onClick={onNavigate}
+              className={cn(
+                "relative py-1 text-sm transition-colors",
+                active ? "font-medium text-ink" : "text-ink-2 hover:text-ink",
+              )}
+            >
+              {l.label}
+              {active && <span className="absolute inset-x-0 -bottom-[21px] h-0.5 bg-pine-700" />}
+            </Link>
+          </li>
+        );
+      })}
+    </>
   );
 }
 
@@ -188,12 +200,12 @@ function MenuItem({
   subtle?: boolean;
 }) {
   const cls = cn(
-    "flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition hover:bg-white/6",
-    subtle ? "text-white/45 hover:text-white/80" : "text-white/80 hover:text-white",
+    "flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm transition hover:bg-canvas",
+    subtle ? "text-ink-3 hover:text-ink-2" : "text-ink-2 hover:text-ink",
   );
   if (href)
     return (
-      <Link href={href} className={cls}>
+      <Link href={href} className={cls} onClick={onClick}>
         {icon}
         {children}
       </Link>

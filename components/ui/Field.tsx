@@ -20,11 +20,11 @@ export function Field({
   return (
     <label className={cn("block", className)}>
       <span className="mb-1.5 flex items-baseline justify-between">
-        <span className="text-[13px] font-medium text-white/80">
+        <span className="text-[13px] font-medium text-ink">
           {label}
-          {required && <span className="ml-1 text-magenta-400">*</span>}
+          {required && <span className="ml-1 text-red-600">*</span>}
         </span>
-        {hint && <span className="text-xs text-white/40">{hint}</span>}
+        {hint && <span className="text-xs text-ink-3">{hint}</span>}
       </span>
       {children}
     </label>
@@ -68,19 +68,11 @@ export function TagInput({
 
   return (
     <div>
-      <div className="field flex min-h-[46px] flex-wrap items-center gap-1.5 py-1.5">
+      <div className="field flex min-h-[42px] flex-wrap items-center gap-1.5 py-1.5">
         {value.map((tag) => (
-          <span
-            key={tag}
-            className="inline-flex items-center gap-1 rounded-lg border border-brand-400/30 bg-brand-500/15 px-2 py-1 text-xs text-brand-100"
-          >
+          <span key={tag} className="inline-flex items-center gap-1 rounded-md border border-pine-100 bg-pine-50 px-2 py-0.5 text-xs text-pine-700">
             {tag}
-            <button
-              type="button"
-              onClick={() => onChange(value.filter((t) => t !== tag))}
-              className="text-brand-200/70 hover:text-white"
-              aria-label={`Remove ${tag}`}
-            >
+            <button type="button" onClick={() => onChange(value.filter((t) => t !== tag))} className="text-pine-600/70 hover:text-pine-800" aria-label={`Remove ${tag}`}>
               <X className="size-3" />
             </button>
           </span>
@@ -91,7 +83,7 @@ export function TagInput({
           onKeyDown={onKey}
           onBlur={() => draft && add(draft)}
           placeholder={value.length ? "" : placeholder}
-          className="min-w-[120px] flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/35"
+          className="min-w-[120px] flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-4"
         />
       </div>
       {remaining.length > 0 && (
@@ -101,7 +93,7 @@ export function TagInput({
               key={s}
               type="button"
               onClick={() => add(s)}
-              className="inline-flex items-center gap-1 rounded-md border border-white/10 px-2 py-1 text-[11px] text-white/55 transition hover:border-brand-400/40 hover:text-white"
+              className="inline-flex items-center gap-1 rounded-md border border-line px-2 py-1 text-[11px] text-ink-3 transition hover:border-ink-3 hover:text-ink"
             >
               <Plus className="size-3" />
               {s}

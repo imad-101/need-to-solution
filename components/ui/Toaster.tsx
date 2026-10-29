@@ -2,12 +2,11 @@
 
 import { CheckCircle2, Info, AlertTriangle, X } from "lucide-react";
 import { usePlatform } from "@/lib/store";
-import { cn } from "@/lib/utils";
 
 const icons = {
-  success: <CheckCircle2 className="size-4 text-emerald-300" />,
-  info: <Info className="size-4 text-sky-300" />,
-  error: <AlertTriangle className="size-4 text-rose-300" />,
+  success: <CheckCircle2 className="size-4 text-pine-600" />,
+  info: <Info className="size-4 text-blue-600" />,
+  error: <AlertTriangle className="size-4 text-red-600" />,
 };
 
 export function Toaster() {
@@ -17,16 +16,14 @@ export function Toaster() {
       {toasts.map((t) => (
         <div
           key={t.id}
-          className={cn(
-            "glass-strong pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-2xl px-4 py-3 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.8)] animate-fade-up",
-          )}
+          className="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-lg border border-line bg-surface px-4 py-3 shadow-[0_12px_32px_-12px_rgba(27,27,25,0.25)] animate-fade-in"
         >
           <span className="mt-0.5">{icons[t.tone ?? "info"]}</span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-white">{t.title}</p>
-            {t.description && <p className="mt-0.5 text-xs text-white/55">{t.description}</p>}
+            <p className="text-sm font-medium text-ink">{t.title}</p>
+            {t.description && <p className="mt-0.5 text-xs text-ink-3">{t.description}</p>}
           </div>
-          <button onClick={() => dismissToast(t.id)} className="text-white/40 hover:text-white" aria-label="Dismiss">
+          <button onClick={() => dismissToast(t.id)} className="text-ink-4 hover:text-ink" aria-label="Dismiss">
             <X className="size-3.5" />
           </button>
         </div>

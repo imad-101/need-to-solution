@@ -35,34 +35,25 @@ export function Modal({
 
   return (
     <div className="fixed inset-0 z-[90] flex items-end justify-center p-0 sm:items-center sm:p-6" role="dialog" aria-modal="true">
-      <button
-        aria-label="Close"
-        onClick={onClose}
-        className="absolute inset-0 bg-ink/70 backdrop-blur-sm animate-[fade-up_0.25s_ease_both]"
-      />
+      <button aria-label="Close" onClick={onClose} className="absolute inset-0 bg-ink/40" />
       <div
         className={cn(
-          "glass-strong relative w-full overflow-hidden rounded-t-3xl sm:rounded-3xl shadow-[0_30px_80px_-20px_rgba(0,0,0,0.7)] animate-fade-up max-h-[92vh] flex flex-col",
+          "relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-xl border border-line bg-surface shadow-[0_24px_60px_-20px_rgba(27,27,25,0.35)] animate-fade-in sm:rounded-xl",
           size === "sm" && "sm:max-w-md",
           size === "md" && "sm:max-w-lg",
           size === "lg" && "sm:max-w-2xl",
         )}
       >
-        <div className="pointer-events-none absolute -top-24 left-1/2 h-48 w-[120%] -translate-x-1/2 rounded-full bg-brand-500/25 blur-3xl" />
-        <div className="relative flex items-start justify-between gap-4 px-6 pt-6 pb-3">
+        <div className="flex items-start justify-between gap-4 border-b border-line px-6 py-5">
           <div>
-            {title && <h2 className="text-lg font-semibold tracking-tight text-white">{title}</h2>}
-            {description && <p className="mt-1 text-sm text-white/55">{description}</p>}
+            {title && <h2 className="font-serif-display text-xl text-ink">{title}</h2>}
+            {description && <p className="mt-1 text-sm text-ink-3">{description}</p>}
           </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-white/50 transition hover:bg-white/10 hover:text-white"
-            aria-label="Close dialog"
-          >
+          <button onClick={onClose} className="rounded-md p-1.5 text-ink-3 transition hover:bg-canvas hover:text-ink" aria-label="Close dialog">
             <X className="size-4" />
           </button>
         </div>
-        <div className="relative overflow-y-auto px-6 pb-6">{children}</div>
+        <div className="overflow-y-auto px-6 py-6">{children}</div>
       </div>
     </div>
   );

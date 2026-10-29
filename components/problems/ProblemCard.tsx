@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, MapPin, Users, HandCoins, ArrowBigUp, Flame } from "lucide-react";
+import { MapPin, Users, HandCoins, ArrowBigUp, Flame } from "lucide-react";
 import { Badge, Chip } from "@/components/ui/Badge";
 import { Avatar, AvatarStack } from "@/components/ui/Avatar";
 import { usePlatform } from "@/lib/store";
@@ -21,23 +21,16 @@ export function ProblemCard({ problem, compact = false }: { problem: Problem; co
   const upvoted = !!currentUser && problem.upvotes.includes(currentUser.id);
 
   return (
-    <article
-      className={cn(
-        "group relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/8 bg-white/[0.03] transition-all duration-300 hover:-translate-y-1 hover:border-brand-400/40 hover:bg-white/[0.05] hover:shadow-[0_30px_60px_-30px_rgba(124,58,237,0.6)]",
-      )}
-    >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 transition group-hover:opacity-100" />
-      <div className="pointer-events-none absolute -right-20 -top-20 size-56 rounded-full bg-brand-500/0 blur-3xl transition duration-500 group-hover:bg-brand-500/20" />
-
-      <div className="relative flex flex-1 flex-col p-5 sm:p-6">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
+    <article className="card card-hover group flex h-full flex-col">
+      <div className="flex flex-1 flex-col p-5">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-1.5">
             <Badge className={statusStyles[problem.status]} dot={statusDot[problem.status]}>
               {STATUS_LABEL[problem.status]}
             </Badge>
             <Badge>{problem.category}</Badge>
             {problem.urgency === "high" && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-300">
+              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-red-600">
                 <Flame className="size-3.5" /> Urgent
               </span>
             )}
@@ -48,10 +41,8 @@ export function ProblemCard({ problem, compact = false }: { problem: Problem; co
               toggleUpvote(problem.id);
             }}
             className={cn(
-              "inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-medium transition",
-              upvoted
-                ? "border-brand-400/50 bg-brand-500/20 text-brand-100"
-                : "border-white/10 text-white/60 hover:border-white/25 hover:text-white",
+              "tabular inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium transition",
+              upvoted ? "border-pine-600 bg-pine-50 text-pine-700" : "border-line text-ink-3 hover:border-ink-3 hover:text-ink",
             )}
             aria-label="Upvote"
           >
@@ -61,25 +52,21 @@ export function ProblemCard({ problem, compact = false }: { problem: Problem; co
         </div>
 
         <Link href={`/problems/${problem.id}`} className="block focus:outline-none">
-          <h3 className="text-balance text-lg font-semibold leading-snug tracking-tight text-white transition group-hover:text-brand-100 sm:text-xl">
+          <h3 className="font-serif-display text-balance text-[1.2rem] leading-snug text-ink group-hover:underline group-hover:decoration-line-strong group-hover:underline-offset-4">
             {problem.title}
           </h3>
-          <p className={cn("mt-2 text-sm leading-relaxed text-white/55", compact ? "line-clamp-2" : "line-clamp-3")}>
-            {problem.summary}
-          </p>
+          <p className={cn("mt-2 text-sm leading-relaxed text-ink-2", compact ? "line-clamp-2" : "line-clamp-3")}>{problem.summary}</p>
         </Link>
 
         <div className="mt-4 flex flex-wrap gap-1.5">
           {problem.needs.slice(0, compact ? 3 : 4).map((n) => (
             <Chip key={n}>{n}</Chip>
           ))}
-          {problem.needs.length > (compact ? 3 : 4) && (
-            <Chip className="text-white/45">+{problem.needs.length - (compact ? 3 : 4)}</Chip>
-          )}
+          {problem.needs.length > (compact ? 3 : 4) && <Chip className="text-ink-3">+{problem.needs.length - (compact ? 3 : 4)}</Chip>}
         </div>
 
         <div className="mt-auto pt-5">
-          <div className="flex items-center justify-between gap-3 text-xs text-white/50">
+          <div className="flex items-center justify-between gap-3 text-xs text-ink-3">
             <span className="inline-flex items-center gap-1.5 truncate">
               <MapPin className="size-3.5 shrink-0" />
               <span className="truncate">{problem.location}</span>
@@ -87,15 +74,15 @@ export function ProblemCard({ problem, compact = false }: { problem: Problem; co
             <span className="shrink-0">{problem.impact}</span>
           </div>
 
-          <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/8 pt-4">
+          <div className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-4">
             <div className="flex items-center gap-2.5">
               {author && <Avatar user={author} size="sm" />}
               <div className="leading-tight">
-                <p className="text-xs font-medium text-white/85">{author?.name ?? "Community member"}</p>
-                <p className="text-[11px] text-white/45">Submitted this</p>
+                <p className="text-xs font-medium text-ink">{author?.name ?? "Community member"}</p>
+                <p className="text-[11px] text-ink-3">Submitted this</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 text-xs text-white/55">
+            <div className="flex items-center gap-3 text-xs text-ink-3">
               {members.length > 0 ? (
                 <AvatarStack users={members} max={3} size="xs" />
               ) : (
@@ -104,26 +91,19 @@ export function ProblemCard({ problem, compact = false }: { problem: Problem; co
                 </span>
               )}
               {pledges.length > 0 && (
-                <span className="inline-flex items-center gap-1 text-emerald-300/80">
+                <span className="inline-flex items-center gap-1 text-pine-700">
                   <HandCoins className="size-3.5" /> {pledges.length}
                 </span>
               )}
             </div>
           </div>
           {openRoles > 0 && (
-            <p className="mt-3 text-[11px] font-medium text-sky-300/90">
+            <p className="mt-3 text-[11px] font-medium text-blue-700">
               {pluralize(openRoles, "open role")} on {pluralize(teams.length, "team")}
             </p>
           )}
         </div>
       </div>
-      <Link
-        href={`/problems/${problem.id}`}
-        aria-label={`Open ${problem.title}`}
-        className="absolute right-4 top-4 hidden size-8 items-center justify-center rounded-full bg-white text-ink opacity-0 shadow-lg transition group-hover:opacity-100 sm:flex translate-y-10"
-      >
-        <ArrowUpRight className="size-4" />
-      </Link>
     </article>
   );
 }

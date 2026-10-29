@@ -6,23 +6,21 @@ type Variant = "primary" | "secondary" | "ghost" | "outline" | "danger";
 type Size = "sm" | "md" | "lg";
 
 const variants: Record<Variant, string> = {
-  primary:
-    "bg-brand-gradient text-white shadow-brand hover:brightness-110 hover:-translate-y-px active:translate-y-0 border border-white/10",
-  secondary:
-    "bg-white text-ink hover:bg-brand-50 border border-white/80 shadow-[0_8px_30px_-12px_rgba(255,255,255,0.45)]",
-  ghost: "text-white/80 hover:text-white hover:bg-white/5 border border-transparent",
-  outline: "text-white border border-white/15 hover:border-brand-400/60 hover:bg-white/5",
-  danger: "text-rose-200 border border-rose-400/30 hover:bg-rose-400/10",
+  primary: "bg-pine-700 text-white hover:bg-pine-800 border border-pine-700 hover:border-pine-800",
+  secondary: "bg-ink text-paper hover:bg-ink-2 border border-ink hover:border-ink-2",
+  outline: "bg-surface text-ink border border-line-strong hover:border-ink-3 hover:bg-canvas",
+  ghost: "text-ink-2 hover:text-ink hover:bg-canvas border border-transparent",
+  danger: "text-red-600 border border-red-600/30 hover:bg-red-50",
 };
 
 const sizes: Record<Size, string> = {
-  sm: "h-9 px-3.5 text-sm gap-1.5 rounded-lg",
-  md: "h-11 px-5 text-sm gap-2 rounded-xl",
-  lg: "h-13 px-7 text-base gap-2.5 rounded-2xl",
+  sm: "h-9 px-3.5 text-[13px] gap-1.5 rounded-md",
+  md: "h-10 px-4 text-sm gap-2 rounded-md",
+  lg: "h-12 px-6 text-[15px] gap-2 rounded-lg",
 };
 
 const base =
-  "inline-flex items-center justify-center font-medium tracking-tight transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ink disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap select-none";
+  "inline-flex items-center justify-center font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pine-600/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap select-none";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;

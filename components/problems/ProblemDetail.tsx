@@ -16,7 +16,6 @@ import {
   Plus,
   Rocket,
   Share2,
-  Sparkles,
   Target,
   Users,
   UserPlus,
@@ -44,12 +43,8 @@ export function ProblemDetail({ id }: { id: string }) {
 
   if (!problem) {
     return (
-      <div className="mx-auto max-w-3xl px-4 pt-36 pb-24 sm:px-6">
-        <EmptyState
-          title="Problem not found"
-          description="It may have been removed, or the link is wrong."
-          action={<Button href="/problems">Browse problems</Button>}
-        />
+      <div className="mx-auto max-w-3xl px-4 py-24 sm:px-6">
+        <EmptyState title="Problem not found" description="It may have been removed, or the link is wrong." action={<Button href="/problems">Browse problems</Button>} />
       </div>
     );
   }
@@ -83,95 +78,89 @@ export function ProblemDetail({ id }: { id: string }) {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 pt-28 pb-24 sm:px-6 sm:pt-32">
-      <Link href="/problems" className="inline-flex items-center gap-1.5 text-sm text-white/50 transition hover:text-white">
+    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
+      <Link href="/problems" className="inline-flex items-center gap-1.5 text-sm text-ink-3 transition hover:text-ink">
         <ArrowLeft className="size-4" /> All problems
       </Link>
 
       {/* Header */}
-      <header className="relative mt-6 overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-brand-600/25 via-ink-3/60 to-magenta-600/15 p-6 sm:p-10">
-        <div className="pointer-events-none absolute inset-0 bg-grid opacity-40 mask-fade-b" />
-        <div className="pointer-events-none absolute -right-24 -top-24 size-80 rounded-full bg-magenta-500/20 blur-3xl" />
-        <div className="relative">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge className={statusStyles[problem.status]} dot={statusDot[problem.status]}>
-              {STATUS_LABEL[problem.status]}
-            </Badge>
-            <Badge>{problem.category}</Badge>
-            <span className={cn("inline-flex items-center gap-1 text-xs font-medium capitalize", urgencyStyles[problem.urgency])}>
-              <Flame className="size-3.5" /> {problem.urgency} urgency
-            </span>
-          </div>
-          <h1 className="mt-5 max-w-4xl text-balance text-3xl font-semibold tracking-[-0.03em] text-white sm:text-5xl sm:leading-[1.05]">
-            {problem.title}
-          </h1>
-          <p className="mt-4 max-w-3xl text-pretty text-base leading-relaxed text-white/70 sm:text-lg">{problem.summary}</p>
+      <header className="mt-6 border-b border-line pb-8">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge className={statusStyles[problem.status]} dot={statusDot[problem.status]}>
+            {STATUS_LABEL[problem.status]}
+          </Badge>
+          <Badge>{problem.category}</Badge>
+          <span className={cn("inline-flex items-center gap-1 text-xs font-medium capitalize", urgencyStyles[problem.urgency])}>
+            <Flame className="size-3.5" /> {problem.urgency} urgency
+          </span>
+        </div>
+        <h1 className="font-serif-display mt-5 max-w-4xl text-balance text-3xl leading-[1.1] text-ink sm:text-5xl">{problem.title}</h1>
+        <p className="mt-4 max-w-3xl text-pretty text-base leading-relaxed text-ink-2 sm:text-lg">{problem.summary}</p>
 
-          <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-white/60">
-            <span className="inline-flex items-center gap-1.5">
-              <MapPin className="size-4" /> {problem.location}
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <Target className="size-4" /> {problem.impact}
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <CalendarDays className="size-4" /> Posted {formatDate(problem.createdAt)}
-            </span>
-          </div>
+        <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-ink-3">
+          <span className="inline-flex items-center gap-1.5">
+            <MapPin className="size-4" /> {problem.location}
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Target className="size-4" /> {problem.impact}
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <CalendarDays className="size-4" /> Posted {formatDate(problem.createdAt)}
+          </span>
+        </div>
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => toggleUpvote(problem.id)}
-              className={cn(
-                "inline-flex h-11 items-center gap-2 rounded-xl border px-4 text-sm font-medium transition",
-                upvoted ? "border-brand-400/60 bg-brand-500/25 text-white" : "border-white/15 bg-white/5 text-white/80 hover:bg-white/10",
-              )}
-            >
-              <ArrowBigUp className={cn("size-5", upvoted && "fill-current")} />
-              {problem.upvotes.length} {upvoted ? "Backed" : "Back this"}
-            </button>
-            {problem.status !== "completed" && (
-              <>
-                <Button onClick={() => (currentUser?.role === "student" ? setTeamModal(true) : openAuth("student"))}>
-                  <Users className="size-4" /> Form a team
-                </Button>
-                <Button variant="outline" onClick={() => (currentUser?.role === "organization" ? setPledgeModal(true) : openAuth("organization"))}>
-                  <HandCoins className="size-4" /> Pledge support
-                </Button>
-              </>
+        <div className="mt-7 flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => toggleUpvote(problem.id)}
+            className={cn(
+              "tabular inline-flex h-10 items-center gap-2 rounded-md border px-3.5 text-sm font-medium transition",
+              upvoted ? "border-pine-600 bg-pine-50 text-pine-700" : "border-line-strong bg-surface text-ink-2 hover:border-ink-3 hover:text-ink",
             )}
-            <Button variant="ghost" onClick={share}>
-              <Share2 className="size-4" /> Share
-            </Button>
-          </div>
+          >
+            <ArrowBigUp className={cn("size-5", upvoted && "fill-current")} />
+            {problem.upvotes.length} {upvoted ? "Backed" : "Back this"}
+          </button>
+          {problem.status !== "completed" && (
+            <>
+              <Button onClick={() => (currentUser?.role === "student" ? setTeamModal(true) : openAuth("student"))}>
+                <Users className="size-4" /> Form a team
+              </Button>
+              <Button variant="outline" onClick={() => (currentUser?.role === "organization" ? setPledgeModal(true) : openAuth("organization"))}>
+                <HandCoins className="size-4" /> Pledge support
+              </Button>
+            </>
+          )}
+          <Button variant="ghost" onClick={share}>
+            <Share2 className="size-4" /> Share
+          </Button>
         </div>
       </header>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px]">
+      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_360px]">
         {/* Main column */}
         <div className="space-y-8">
-          <section className="glass rounded-3xl p-6 sm:p-8">
-            <h2 className="text-lg font-semibold text-white">The situation</h2>
-            <p className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-white/70">{problem.description}</p>
+          <section>
+            <h2 className="label mb-3">The situation</h2>
+            <p className="max-w-3xl whitespace-pre-line text-[15px] leading-relaxed text-ink-2">{problem.description}</p>
             <div className="mt-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/40">Help needed</p>
+              <p className="label">Help needed</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {problem.needs.map((n) => (
-                  <Chip key={n} className="px-3 py-1.5 text-sm">
+                  <Chip key={n} className="px-2.5 py-1 text-sm">
                     {n}
                   </Chip>
                 ))}
               </div>
             </div>
             {author && (
-              <div className="mt-8 flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+              <div className="card mt-6 flex items-center gap-3 p-4">
                 <Avatar user={author} size="lg" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-white/45">Submitted by</p>
-                  <Link href={`/contributors/${author.id}`} className="text-sm font-semibold text-white hover:text-brand-100">
+                  <p className="text-xs text-ink-3">Submitted by</p>
+                  <Link href={`/contributors/${author.id}`} className="text-sm font-medium text-ink hover:underline underline-offset-4">
                     {author.name}
                   </Link>
-                  <p className="truncate text-xs text-white/55">
+                  <p className="truncate text-xs text-ink-3">
                     {author.headline} · {author.location}
                   </p>
                 </div>
@@ -181,9 +170,9 @@ export function ProblemDetail({ id }: { id: string }) {
 
           {/* Teams */}
           <section>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-white">
-                Teams <span className="text-white/40">({teams.length})</span>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="label">
+                Teams <span className="text-ink-4">({teams.length})</span>
               </h2>
               {problem.status !== "completed" && currentUser?.role === "student" && !isMember && (
                 <Button size="sm" variant="outline" onClick={() => setTeamModal(true)}>
@@ -194,11 +183,11 @@ export function ProblemDetail({ id }: { id: string }) {
             {teams.length === 0 ? (
               <EmptyState
                 icon={<Users className="size-5" />}
-                title="No team yet. This is your opening."
+                title="No team yet"
                 description="Start a team, define the roles you need, and other students can join you."
                 action={
                   <Button onClick={() => (currentUser?.role === "student" ? setTeamModal(true) : openAuth("student"))}>
-                    <Sparkles className="size-4" /> Form the first team
+                    Form the first team
                   </Button>
                 }
               />
@@ -213,27 +202,27 @@ export function ProblemDetail({ id }: { id: string }) {
 
           {/* Milestones */}
           {(problem.milestones.length > 0 || isMember) && (
-            <section className="glass rounded-3xl p-6 sm:p-8">
+            <section className="card p-5 sm:p-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold text-white">Milestones</h2>
-                <span className="text-sm text-white/50">
+                <h2 className="text-base font-medium text-ink">Milestones</h2>
+                <span className="tabular text-sm text-ink-3">
                   {doneCount}/{problem.milestones.length} complete
                 </span>
               </div>
               <Progress value={progress} className="mt-4" />
-              <ul className="mt-5 space-y-2">
+              <ul className="mt-4 divide-y divide-line">
                 {problem.milestones.map((m) => (
                   <li key={m.id}>
                     <button
                       disabled={!isMember || problem.status === "completed"}
                       onClick={() => platform.toggleMilestone(problem.id, m.id)}
                       className={cn(
-                        "flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-left text-sm transition",
-                        isMember && problem.status !== "completed" && "hover:border-white/10 hover:bg-white/[0.04]",
-                        m.done ? "text-white/60 line-through decoration-white/30" : "text-white",
+                        "flex w-full items-center gap-3 py-2.5 text-left text-sm transition",
+                        isMember && problem.status !== "completed" && "hover:text-pine-700",
+                        m.done ? "text-ink-3 line-through decoration-ink-4" : "text-ink",
                       )}
                     >
-                      {m.done ? <CheckCircle2 className="size-5 text-emerald-300" /> : <Circle className="size-5 text-white/25" />}
+                      {m.done ? <CheckCircle2 className="size-[18px] text-pine-600" /> : <Circle className="size-[18px] text-ink-4" />}
                       {m.title}
                     </button>
                   </li>
@@ -244,23 +233,23 @@ export function ProblemDetail({ id }: { id: string }) {
           )}
 
           {/* Updates */}
-          <section className="glass rounded-3xl p-6 sm:p-8">
-            <h2 className="text-lg font-semibold text-white">Updates</h2>
+          <section className="card p-5 sm:p-6">
+            <h2 className="text-base font-medium text-ink">Updates</h2>
             {problem.updates.length === 0 ? (
-              <p className="mt-3 text-sm text-white/50">No updates yet. Team members, the submitter and supporters can post here.</p>
+              <p className="mt-2 text-sm text-ink-3">No updates yet. Team members, the submitter and supporters can post here.</p>
             ) : (
-              <ol className="relative mt-5 space-y-6 border-l border-white/10 pl-6">
+              <ol className="mt-5 space-y-6 border-l border-line pl-5">
                 {[...problem.updates].reverse().map((u) => {
                   const a = state.users.find((x) => x.id === u.authorId);
                   return (
                     <li key={u.id} className="relative">
-                      <span className="absolute -left-[31px] top-1 size-2.5 rounded-full bg-brand-gradient ring-4 ring-ink" />
+                      <span className="absolute -left-[25px] top-1.5 size-2 rounded-full bg-pine-600 ring-4 ring-surface" />
                       <div className="flex items-center gap-2.5">
                         {a && <Avatar user={a} size="xs" />}
-                        <p className="text-sm font-medium text-white">{a?.name ?? "Unknown"}</p>
-                        <span className="text-xs text-white/40">{formatDate(u.createdAt)}</span>
+                        <p className="text-sm font-medium text-ink">{a?.name ?? "Unknown"}</p>
+                        <span className="text-xs text-ink-3">{formatDate(u.createdAt)}</span>
                       </div>
-                      <p className="mt-2 text-sm leading-relaxed text-white/70">{u.text}</p>
+                      <p className="mt-1.5 text-sm leading-relaxed text-ink-2">{u.text}</p>
                     </li>
                   );
                 })}
@@ -271,9 +260,9 @@ export function ProblemDetail({ id }: { id: string }) {
 
           {credentials.length > 0 && (
             <section>
-              <div className="mb-4 flex items-center gap-2">
-                <BadgeCheck className="size-5 text-emerald-300" />
-                <h2 className="text-lg font-semibold text-white">Credentials issued</h2>
+              <div className="mb-3 flex items-center gap-2">
+                <BadgeCheck className="size-4 text-pine-600" />
+                <h2 className="label">Credentials issued</h2>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 {credentials.map((c) => (
@@ -285,10 +274,10 @@ export function ProblemDetail({ id }: { id: string }) {
         </div>
 
         {/* Sidebar */}
-        <aside className="space-y-5 lg:sticky lg:top-28 lg:self-start">
+        <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
           {/* Lifecycle */}
-          <div className="glass rounded-3xl p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/40">Lifecycle</p>
+          <div className="card p-5">
+            <p className="label">Lifecycle</p>
             <ol className="mt-4 space-y-3">
               {(["open", "forming", "in-progress", "completed"] as const).map((s, i) => {
                 const order = ["open", "forming", "in-progress", "completed"];
@@ -299,16 +288,14 @@ export function ProblemDetail({ id }: { id: string }) {
                   <li key={s} className="flex items-center gap-3">
                     <span
                       className={cn(
-                        "relative flex size-6 items-center justify-center rounded-full border text-[10px] font-semibold",
-                        reached ? "border-brand-400/60 bg-brand-500/30 text-white" : "border-white/15 text-white/35",
+                        "tabular flex size-6 items-center justify-center rounded-full border text-[11px] font-medium",
+                        reached ? "border-pine-600 bg-pine-50 text-pine-700" : "border-line text-ink-4",
+                        current && problem.status !== "completed" && "ring-2 ring-pine-100",
                       )}
                     >
                       {reached && !current ? <CheckCircle2 className="size-3.5" /> : i + 1}
-                      {current && problem.status !== "completed" && (
-                        <span className="absolute inset-0 rounded-full border border-brand-300 animate-pulse-ring" />
-                      )}
                     </span>
-                    <span className={cn("text-sm", reached ? "text-white" : "text-white/40")}>{STATUS_LABEL[s]}</span>
+                    <span className={cn("text-sm", reached ? "text-ink" : "text-ink-4")}>{STATUS_LABEL[s]}</span>
                   </li>
                 );
               })}
@@ -321,62 +308,56 @@ export function ProblemDetail({ id }: { id: string }) {
             )}
             {(isLead || isSupporter || isAuthor) && problem.status === "in-progress" && (
               <Button className="mt-5 w-full" onClick={() => platform.completeProject(problem.id)}>
-                <BadgeCheck className="size-4" /> Mark complete & issue credentials
+                <BadgeCheck className="size-4" /> Mark complete and issue credentials
               </Button>
             )}
-            {problem.status === "completed" && problem.completedAt && (
-              <p className="mt-4 text-xs text-white/50">Completed {formatDate(problem.completedAt)}</p>
-            )}
+            {problem.status === "completed" && problem.completedAt && <p className="mt-4 text-xs text-ink-3">Completed {formatDate(problem.completedAt)}</p>}
           </div>
 
           {/* Support */}
-          <div className="glass rounded-3xl p-5">
+          <div className="card p-5">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/40">Support</p>
-              {totalFunding > 0 && <span className="text-sm font-semibold text-emerald-300">{formatMoney(totalFunding)}</span>}
+              <p className="label">Support</p>
+              {totalFunding > 0 && <span className="tabular text-sm font-medium text-pine-700">{formatMoney(totalFunding)}</span>}
             </div>
             {pledges.length === 0 ? (
-              <p className="mt-3 text-sm text-white/50">No organization has pledged yet.</p>
+              <p className="mt-3 text-sm text-ink-3">No organization has pledged yet.</p>
             ) : (
-              <ul className="mt-4 space-y-3">
+              <ul className="mt-4 divide-y divide-line">
                 {pledges.map((p) => {
                   const org = state.users.find((u) => u.id === p.orgId);
                   return (
-                    <li key={p.id} className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+                    <li key={p.id} className="py-3 first:pt-0 last:pb-0">
                       <div className="flex items-center gap-2.5">
                         {org && <Avatar user={org} size="sm" />}
                         <div className="min-w-0 flex-1">
-                          <Link href={`/contributors/${p.orgId}`} className="block truncate text-sm font-medium text-white hover:text-brand-100">
+                          <Link href={`/contributors/${p.orgId}`} className="block truncate text-sm font-medium text-ink hover:underline underline-offset-4">
                             {org?.name}
                           </Link>
                         </div>
-                        <span className={cn("rounded-md border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider", pledgeStyles[p.type])}>
+                        <span className={cn("rounded-md border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide", pledgeStyles[p.type])}>
                           {PLEDGE_LABEL[p.type]}
                           {p.amount ? ` · ${formatMoney(p.amount)}` : ""}
                         </span>
                       </div>
-                      <p className="mt-2 text-xs leading-relaxed text-white/60">{p.details}</p>
+                      <p className="mt-2 text-xs leading-relaxed text-ink-2">{p.details}</p>
                     </li>
                   );
                 })}
               </ul>
             )}
             {problem.status !== "completed" && (
-              <Button
-                variant="outline"
-                className="mt-4 w-full"
-                onClick={() => (currentUser?.role === "organization" ? setPledgeModal(true) : openAuth("organization"))}
-              >
+              <Button variant="outline" className="mt-4 w-full" onClick={() => (currentUser?.role === "organization" ? setPledgeModal(true) : openAuth("organization"))}>
                 <HandCoins className="size-4" /> Pledge support
               </Button>
             )}
           </div>
 
           {/* Backers */}
-          <div className="glass rounded-3xl p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/40">Backed by</p>
+          <div className="card p-5">
+            <p className="label">Backed by</p>
             <div className="mt-3 flex flex-wrap gap-1.5">
-              {problem.upvotes.length === 0 && <p className="text-sm text-white/50">Be the first to back this.</p>}
+              {problem.upvotes.length === 0 && <p className="text-sm text-ink-3">Be the first to back this.</p>}
               {problem.upvotes
                 .map((id) => state.users.find((u) => u.id === id))
                 .filter((u): u is NonNullable<typeof u> => !!u)
@@ -406,46 +387,46 @@ function TeamCard({ team, onJoin, completed }: { team: Team; onJoin: () => void;
   const isLead = currentUser?.id === team.leadId;
 
   return (
-    <div className="glass overflow-hidden rounded-3xl p-5 sm:p-6">
+    <div className="card p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <h3 className="text-lg font-semibold tracking-tight text-white">{team.name}</h3>
-          <p className="mt-1 text-sm leading-relaxed text-white/60">{team.pitch}</p>
+          <h3 className="font-serif-display text-xl text-ink">{team.name}</h3>
+          <p className="mt-1 text-sm leading-relaxed text-ink-2">{team.pitch}</p>
         </div>
-        <span className="text-xs text-white/45">Formed {formatDate(team.createdAt)}</span>
+        <span className="text-xs text-ink-3">Formed {formatDate(team.createdAt)}</span>
       </div>
 
       <div className="mt-5 grid gap-5 sm:grid-cols-2">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/40">Members</p>
+          <p className="label">Members</p>
           <ul className="mt-3 space-y-2.5">
             {members.map((m) => (
               <li key={m.id} className="flex items-center gap-2.5">
                 <Avatar user={m} size="sm" />
                 <div className="min-w-0 leading-tight">
-                  <Link href={`/contributors/${m.id}`} className="block truncate text-sm font-medium text-white hover:text-brand-100">
+                  <Link href={`/contributors/${m.id}`} className="block truncate text-sm font-medium text-ink hover:underline underline-offset-4">
                     {m.name}
-                    {m.id === team.leadId && <span className="ml-1.5 rounded bg-brand-500/25 px-1.5 py-0.5 text-[10px] text-brand-100">Lead</span>}
+                    {m.id === team.leadId && <span className="ml-1.5 rounded bg-canvas px-1.5 py-0.5 text-[10px] font-medium text-ink-2">Lead</span>}
                   </Link>
-                  <p className="truncate text-xs text-white/50">{team.memberRoles[m.id]}</p>
+                  <p className="truncate text-xs text-ink-3">{team.memberRoles[m.id]}</p>
                 </div>
               </li>
             ))}
           </ul>
         </div>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/40">Open roles</p>
+          <p className="label">Open roles</p>
           {team.openRoles.length === 0 ? (
-            <p className="mt-3 text-sm text-white/50">{completed ? "Project completed." : "Team is full for now."}</p>
+            <p className="mt-3 text-sm text-ink-3">{completed ? "Project completed." : "Team is full for now."}</p>
           ) : (
             <ul className="mt-3 space-y-2">
               {team.openRoles.map((r) => (
-                <li key={r} className="flex items-center justify-between gap-2 rounded-xl border border-dashed border-sky-400/30 bg-sky-400/5 px-3 py-2 text-sm text-sky-100">
+                <li key={r} className="flex items-center justify-between gap-2 rounded-md border border-dashed border-blue-600/40 bg-blue-50 px-3 py-2 text-sm text-blue-700">
                   {r}
                   {!isMember && !completed && (
                     <button
                       onClick={() => (currentUser?.role === "student" ? onJoin() : openAuth("student"))}
-                      className="inline-flex items-center gap-1 rounded-md bg-sky-400/15 px-2 py-1 text-xs font-medium text-sky-100 hover:bg-sky-400/25"
+                      className="inline-flex items-center gap-1 rounded-md bg-surface px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-600/30 hover:bg-blue-50"
                     >
                       <UserPlus className="size-3.5" /> Join
                     </button>
@@ -480,16 +461,11 @@ function PostUpdate({ problemId }: { problemId: string }) {
         postUpdate(problemId, text);
         setText("");
       }}
-      className="mt-6 flex gap-3 border-t border-white/8 pt-5"
+      className="mt-6 flex gap-3 border-t border-line pt-5"
     >
       {currentUser && <Avatar user={currentUser} size="sm" className="mt-1" />}
       <div className="flex-1">
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Share progress with the community…"
-          className="field min-h-[80px] resize-y"
-        />
+        <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Share progress with the community…" className="field min-h-[80px] resize-y" />
         <div className="mt-2 flex justify-end">
           <Button size="sm" type="submit" disabled={!text.trim()}>
             <MessageSquare className="size-4" /> Post update
@@ -586,35 +562,34 @@ function JoinTeamModal({ team, onClose }: { team: Team | null; onClose: () => vo
           className="space-y-4"
         >
           <div className="space-y-2">
-            {team.openRoles.map((r) => (
-              <button
-                type="button"
-                key={r}
-                onClick={() => setRole(r)}
-                className={cn(
-                  "flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-sm transition",
-                  (role || team.openRoles[0]) === r && role !== "__custom"
-                    ? "border-brand-400/60 bg-brand-500/15 text-white"
-                    : "border-white/10 bg-white/[0.03] text-white/70 hover:border-white/20",
-                )}
-              >
-                {r}
-                {(role || team.openRoles[0]) === r && role !== "__custom" && <CheckCircle2 className="size-4 text-brand-200" />}
-              </button>
-            ))}
+            {team.openRoles.map((r) => {
+              const selected = (role || team.openRoles[0]) === r && role !== "__custom";
+              return (
+                <button
+                  type="button"
+                  key={r}
+                  onClick={() => setRole(r)}
+                  className={cn(
+                    "flex w-full items-center justify-between rounded-md border px-4 py-3 text-left text-sm transition",
+                    selected ? "border-pine-600 bg-pine-50 text-ink" : "border-line bg-surface text-ink-2 hover:border-line-strong",
+                  )}
+                >
+                  {r}
+                  {selected && <CheckCircle2 className="size-4 text-pine-600" />}
+                </button>
+              );
+            })}
             <button
               type="button"
               onClick={() => setRole("__custom")}
               className={cn(
-                "w-full rounded-xl border px-4 py-3 text-left text-sm transition",
-                role === "__custom" ? "border-brand-400/60 bg-brand-500/15 text-white" : "border-dashed border-white/15 text-white/60 hover:border-white/30",
+                "w-full rounded-md border px-4 py-3 text-left text-sm transition",
+                role === "__custom" ? "border-pine-600 bg-pine-50 text-ink" : "border-dashed border-line-strong text-ink-3 hover:border-ink-3",
               )}
             >
               Propose a different role
             </button>
-            {role === "__custom" && (
-              <input className="field" autoFocus value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="What will you contribute?" />
-            )}
+            {role === "__custom" && <input className="field" autoFocus value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="What will you contribute?" />}
           </div>
           <Button type="submit" className="w-full" disabled={!effective.trim()}>
             <UserPlus className="size-4" /> Join as {effective || "…"}
@@ -652,8 +627,8 @@ function PledgeModal({ open, onClose, problemId }: { open: boolean; onClose: () 
               key={t}
               onClick={() => setType(t)}
               className={cn(
-                "rounded-xl border px-3 py-3 text-sm font-medium transition",
-                type === t ? cn("ring-glow", pledgeStyles[t]) : "border-white/10 bg-white/[0.03] text-white/60 hover:border-white/20",
+                "rounded-md border px-3 py-2.5 text-sm font-medium transition",
+                type === t ? "border-pine-600 bg-pine-50 text-pine-700" : "border-line bg-surface text-ink-2 hover:border-line-strong",
               )}
             >
               {PLEDGE_LABEL[t]}
@@ -666,7 +641,13 @@ function PledgeModal({ open, onClose, problemId }: { open: boolean; onClose: () 
           </Field>
         )}
         <Field label="Details" required hint="What, when, and any conditions">
-          <textarea className="field min-h-[100px]" value={details} onChange={(e) => setDetails(e.target.value)} placeholder={type === "mentorship" ? "Weekly review calls with one of our engineers…" : type === "resources" ? "One solar pump kit delivered to site…" : "Printing, transport and volunteer stipends…"} required />
+          <textarea
+            className="field min-h-[100px]"
+            value={details}
+            onChange={(e) => setDetails(e.target.value)}
+            placeholder={type === "mentorship" ? "Weekly review calls with one of our engineers…" : type === "resources" ? "One solar pump kit delivered to site…" : "Printing, transport and volunteer stipends…"}
+            required
+          />
         </Field>
         <Button type="submit" className="w-full" size="lg">
           <HandCoins className="size-4" /> Confirm pledge

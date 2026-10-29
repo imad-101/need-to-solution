@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Building2, GraduationCap, Users, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { Building2, GraduationCap, Users } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Field, TagInput } from "@/components/ui/Field";
@@ -11,9 +11,9 @@ import { ROLE_LABEL, type Role, type User } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const roleMeta: Record<Role, { icon: React.ReactNode; blurb: string }> = {
-  community: { icon: <Users className="size-5" />, blurb: "Submit problems your community faces." },
-  student: { icon: <GraduationCap className="size-5" />, blurb: "Form teams and earn verified experience." },
-  organization: { icon: <Building2 className="size-5" />, blurb: "Fund, mentor or resource projects." },
+  community: { icon: <Users className="size-4" />, blurb: "Submit problems your community faces." },
+  student: { icon: <GraduationCap className="size-4" />, blurb: "Form teams and earn verified experience." },
+  organization: { icon: <Building2 className="size-4" />, blurb: "Fund, mentor or resource projects." },
 };
 
 const skillSuggestions: Record<Role, string[]> = {
@@ -23,8 +23,17 @@ const skillSuggestions: Record<Role, string[]> = {
 };
 
 export function AuthModal() {
-  const { authOpen, authRole, closeAuth, signIn, signInAs, state } = usePlatform();
-  const [role, setRole] = useState<Role>("student");
+  const { authOpen, authRole, closeAuth } = usePlatform();
+  return (
+    <Modal open={authOpen} onClose={closeAuth} title="Sign in to NeedToSolution" description="Choose how you take part. This demo needs no password.">
+      <AuthBody key={`${authOpen}-${authRole ?? "any"}`} initialRole={authRole ?? "student"} />
+    </Modal>
+  );
+}
+
+function AuthBody({ initialRole }: { initialRole: Role }) {
+  const { signIn, signInAs, state } = usePlatform();
+  const [role, setRole] = useState<Role>(initialRole);
   const [name, setName] = useState("");
   const [headline, setHeadline] = useState("");
   const [location, setLocation] = useState("");
@@ -32,38 +41,27 @@ export function AuthModal() {
   const [orgType, setOrgType] = useState<NonNullable<User["orgType"]>>("NGO");
   const [tab, setTab] = useState<"create" | "demo">("create");
 
-  useEffect(() => {
-    if (authOpen) {
-      setRole(authRole ?? "student");
-      setTab("create");
-    }
-  }, [authOpen, authRole]);
-
   const demoUsers = state.users.filter((u) => ["u-amina", "u-dev", "u-hope", "u-sara", "u-rahul", "u-civic"].includes(u.id));
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
     signIn({ name, role, headline, location, skills, orgType: role === "organization" ? orgType : undefined });
-    setName("");
-    setHeadline("");
-    setLocation("");
-    setSkills([]);
   };
 
   return (
-    <Modal open={authOpen} onClose={closeAuth} title="Join NeedToSolution" description="Choose how you want to take part. No password needed for this demo.">
-      <div className="mb-5 grid grid-cols-2 rounded-xl border border-white/10 bg-white/[0.03] p-1 text-sm">
+    <>
+      <div className="mb-5 flex gap-6 border-b border-line text-sm">
         {(["create", "demo"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={cn(
-              "rounded-lg py-2 font-medium transition",
-              tab === t ? "bg-white/10 text-white shadow" : "text-white/50 hover:text-white",
+              "-mb-px border-b-2 pb-2.5 font-medium transition",
+              tab === t ? "border-pine-700 text-ink" : "border-transparent text-ink-3 hover:text-ink",
             )}
           >
-            {t === "create" ? "Create account" : "Try a demo account"}
+            {t === "create" ? "Create account" : "Use a demo account"}
           </button>
         ))}
       </div>
@@ -77,17 +75,13 @@ export function AuthModal() {
                 key={r}
                 onClick={() => setRole(r)}
                 className={cn(
-                  "relative rounded-2xl border p-3 text-left transition",
-                  role === r
-                    ? "border-brand-400/60 bg-brand-500/15 ring-glow"
-                    : "border-white/10 bg-white/[0.03] hover:border-white/20",
+                  "rounded-lg border p-3 text-left transition",
+                  role === r ? "border-pine-600 bg-pine-50" : "border-line bg-surface hover:border-line-strong",
                 )}
               >
-                <span className={cn("mb-2 inline-flex rounded-lg p-1.5", role === r ? "bg-brand-gradient text-white" : "bg-white/8 text-white/70")}>
-                  {roleMeta[r].icon}
-                </span>
-                <p className="text-sm font-medium text-white">{ROLE_LABEL[r]}</p>
-                <p className="mt-0.5 text-[11px] leading-snug text-white/50">{roleMeta[r].blurb}</p>
+                <span className={cn("mb-2 inline-flex rounded-md p-1.5", role === r ? "bg-pine-700 text-white" : "bg-canvas text-ink-2")}>{roleMeta[r].icon}</span>
+                <p className="text-sm font-medium text-ink">{ROLE_LABEL[r]}</p>
+                <p className="mt-0.5 text-[11px] leading-snug text-ink-3">{roleMeta[r].blurb}</p>
               </button>
             ))}
           </div>
@@ -120,31 +114,28 @@ export function AuthModal() {
           </Field>
 
           <Button type="submit" className="w-full" size="lg">
-            <Sparkles className="size-4" />
             Continue as {ROLE_LABEL[role].toLowerCase()}
           </Button>
         </form>
       ) : (
         <div className="space-y-2">
-          <p className="mb-3 text-xs text-white/45">Jump into a seeded account to explore each perspective.</p>
+          <p className="mb-3 text-xs text-ink-3">Jump into a seeded account to explore each perspective.</p>
           {demoUsers.map((u) => (
             <button
               key={u.id}
               onClick={() => signInAs(u.id)}
-              className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-left transition hover:border-brand-400/50 hover:bg-brand-500/10"
+              className="card card-hover flex w-full items-center gap-3 p-3 text-left"
             >
               <Avatar user={u} />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium text-white">{u.name}</span>
-                <span className="block truncate text-xs text-white/50">{u.headline}</span>
+                <span className="block truncate text-sm font-medium text-ink">{u.name}</span>
+                <span className="block truncate text-xs text-ink-3">{u.headline}</span>
               </span>
-              <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wider text-white/50">
-                {ROLE_LABEL[u.role]}
-              </span>
+              <span className="rounded-md border border-line px-2 py-0.5 text-[11px] text-ink-3">{ROLE_LABEL[u.role]}</span>
             </button>
           ))}
         </div>
       )}
-    </Modal>
+    </>
   );
 }
