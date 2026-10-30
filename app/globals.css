@@ -38,11 +38,55 @@
   --color-rust-600: #9a4b1f;
   --color-rust-700: #7d3c18;
 
+  --ease-out-quart: cubic-bezier(0.22, 1, 0.36, 1);
+
   --animate-fade-in: fade-in 0.5s ease-out both;
+  --animate-rise: rise 0.9s var(--ease-out-quart) both;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-float-slow: float 9s ease-in-out infinite;
+  --animate-drift: drift 18s ease-in-out infinite alternate;
+  --animate-marquee: marquee 48s linear infinite;
+  --animate-ping-soft: ping-soft 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  --animate-progress: progress 4s linear both;
+  --animate-pop: pop 0.35s var(--ease-out-quart) both;
+  --animate-slide-in: slide-in 0.45s var(--ease-out-quart) both;
 
   @keyframes fade-in {
     from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(18px); filter: blur(6px); }
+    to { opacity: 1; transform: translateY(0); filter: blur(0); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
+    50% { transform: translateY(-8px) rotate(var(--tilt, 0deg)); }
+  }
+  @keyframes drift {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to { transform: translate3d(40px, -30px, 0) scale(1.08); }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes ping-soft {
+    0% { transform: scale(1); opacity: 0.8; }
+    80%, 100% { transform: scale(2.6); opacity: 0; }
+  }
+  @keyframes progress {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+  @keyframes pop {
+    0% { transform: scale(0.6); }
+    60% { transform: scale(1.18); }
+    100% { transform: scale(1); }
+  }
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
   }
 }
 
@@ -81,11 +125,74 @@ body {
     border-radius: 0.75rem;
   }
   .card-hover {
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: border-color 0.2s ease, box-shadow 0.25s ease, transform 0.25s var(--ease-out-quart);
   }
   .card-hover:hover {
     border-color: var(--color-line-strong);
-    box-shadow: 0 1px 2px rgba(27, 27, 25, 0.04), 0 8px 24px -16px rgba(27, 27, 25, 0.18);
+    transform: translateY(-3px);
+    box-shadow: 0 1px 2px rgba(27, 27, 25, 0.04), 0 18px 36px -20px rgba(27, 27, 25, 0.28);
+  }
+  /* Thin pine bar that slides in along the top edge on hover. */
+  .card-accent {
+    position: relative;
+    overflow: hidden;
+  }
+  .card-accent::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: var(--color-pine-600);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s var(--ease-out-quart);
+  }
+  .card-accent:hover::before,
+  .card-accent:focus-within::before {
+    transform: scaleX(1);
+  }
+  /* Animated underline for text links. */
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.3s var(--ease-out-quart);
+  }
+  .link-underline:hover,
+  .link-underline:focus-visible {
+    background-size: 100% 1px;
+  }
+  /* Live indicator: a dot with a soft expanding ring. */
+  .live-dot {
+    position: relative;
+    display: inline-flex;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: var(--color-pine-500);
+  }
+  .live-dot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--color-pine-500);
+    animation: var(--animate-ping-soft);
+  }
+  /* Marquee strip with faded edges. */
+  .marquee {
+    overflow: hidden;
+    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  }
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    animation: var(--animate-marquee);
+  }
+  .marquee:hover .marquee-track {
+    animation-play-state: paused;
   }
   .label {
     font-size: 0.6875rem;
@@ -129,12 +236,38 @@ body {
   }
   .reveal {
     opacity: 0;
-    transform: translateY(8px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    transform: translateY(16px);
+    filter: blur(4px);
+    transition: opacity 0.7s var(--ease-out-quart), transform 0.7s var(--ease-out-quart), filter 0.7s var(--ease-out-quart);
   }
   .reveal.is-visible {
     opacity: 1;
     transform: translateY(0);
+    filter: blur(0);
+  }
+  /* Mount-time entrance, staggered with --d (ms). Used above the fold where observers are overkill. */
+  .enter {
+    animation: var(--animate-rise);
+    animation-delay: var(--d, 0ms);
+  }
+  /* Subtle dot grid that fades out toward the edges. */
+  .bg-dots {
+    background-image: radial-gradient(var(--color-line-strong) 1px, transparent 1px);
+    background-size: 22px 22px;
+    mask-image: radial-gradient(ellipse 70% 70% at 50% 40%, black 20%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 40%, black 20%, transparent 75%);
+  }
+  /* Fine paper grain. */
+  .grain {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    opacity: 0.045;
+    mix-blend-mode: multiply;
+  }
+  .icon-nudge svg:last-child:not(:first-child) {
+    transition: transform 0.2s var(--ease-out-quart);
+  }
+  .icon-nudge:hover svg:last-child:not(:first-child) {
+    transform: translateX(3px);
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -147,10 +280,40 @@ body {
   }
 }
 
+/* Printing a certificate: hide everything else. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .certificate,
+  .certificate * {
+    visibility: visible;
+  }
+  .certificate {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    border: none;
+    box-shadow: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  .reveal, .enter {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+  .marquee-track {
+    animation: none;
+    width: auto;
+  }
+  .marquee-track > [aria-hidden="true"] {
+    display: none;
   }
 }

@@ -8,12 +8,12 @@ export const metadata: Metadata = {
 
 function Skeleton() {
   return (
-    <div className="mx-auto max-w-7xl px-4 pt-28 pb-24 sm:px-6 sm:pt-32">
-      <div className="h-4 w-24 rounded bg-white/5" />
-      <div className="mt-6 h-72 animate-pulse rounded-[2rem] border border-white/10 bg-white/[0.03]" />
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px]">
-        <div className="h-96 animate-pulse rounded-3xl bg-white/[0.03]" />
-        <div className="h-64 animate-pulse rounded-3xl bg-white/[0.03]" />
+    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
+      <div className="h-4 w-24 rounded bg-canvas" />
+      <div className="mt-6 h-48 animate-pulse rounded-lg bg-canvas" />
+      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_360px]">
+        <div className="h-96 animate-pulse rounded-lg bg-canvas" />
+        <div className="h-64 animate-pulse rounded-lg bg-canvas" />
       </div>
     </div>
   );

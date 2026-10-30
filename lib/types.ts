@@ -1,6 +1,12 @@
-export type Role = "community" | "student" | "organization";
+export type Role = "community" | "student" | "organization" | "admin";
+
+/** Roles a visitor can pick when creating an account. Admins are created by the seed script. */
+export type SignupRole = Exclude<Role, "admin">;
 
 export type ProblemStatus = "open" | "forming" | "in-progress" | "completed";
+
+/** Admin review pipeline. Only approved problems are visible to the public. */
+export type ReviewStatus = "pending" | "approved" | "rejected";
 
 export type Urgency = "low" | "medium" | "high";
 
@@ -15,6 +21,8 @@ export type Category =
   | "Agriculture"
   | "Economic Opportunity";
 
+export type OrgType = "NGO" | "Company" | "University" | "Government" | "Foundation";
+
 export interface User {
   id: string;
   name: string;
@@ -24,8 +32,13 @@ export interface User {
   skills: string[];
   bio?: string;
   avatarHue: number;
-  orgType?: "NGO" | "Company" | "University" | "Government" | "Foundation";
+  orgType?: OrgType;
   joinedAt: string;
+}
+
+/** The signed-in user. Email is only ever sent to its owner. */
+export interface CurrentUser extends User {
+  email: string;
 }
 
 export interface Update {
@@ -58,6 +71,9 @@ export interface Problem {
   updates: Update[];
   milestones: Milestone[];
   completedAt?: string;
+  reviewStatus: ReviewStatus;
+  reviewNote?: string;
+  reviewedAt?: string;
 }
 
 export interface Team {
@@ -82,6 +98,7 @@ export interface Pledge {
   createdAt: string;
 }
 
+/** A verifiable certificate of project experience. `id` is the public serial number. */
 export interface Credential {
   id: string;
   userId: string;
@@ -103,6 +120,12 @@ export interface PlatformState {
   currentUserId: string | null;
 }
 
+/** What the server hands the client provider: public state plus the viewer. */
+export interface ClientState {
+  state: PlatformState;
+  currentUser: CurrentUser | null;
+}
+
 export const CATEGORIES: Category[] = [
   "Health",
   "Education",
@@ -113,10 +136,13 @@ export const CATEGORIES: Category[] = [
   "Economic Opportunity",
 ];
 
+export const ORG_TYPES: OrgType[] = ["NGO", "Company", "University", "Government", "Foundation"];
+
 export const ROLE_LABEL: Record<Role, string> = {
   community: "Community member",
   student: "Student",
   organization: "Organization",
+  admin: "Administrator",
 };
 
 export const STATUS_LABEL: Record<ProblemStatus, string> = {
@@ -124,6 +150,12 @@ export const STATUS_LABEL: Record<ProblemStatus, string> = {
   forming: "Team forming",
   "in-progress": "In progress",
   completed: "Completed",
+};
+
+export const REVIEW_LABEL: Record<ReviewStatus, string> = {
+  pending: "Under review",
+  approved: "Approved",
+  rejected: "Not approved",
 };
 
 export const PLEDGE_LABEL: Record<PledgeType, string> = {

@@ -32,7 +32,12 @@ export function Reveal({
       { threshold: 0.12, rootMargin: "0px 0px -40px 0px" },
     );
     io.observe(el);
-    return () => io.disconnect();
+    // Safety net: never leave content hidden if the observer is slow or unavailable.
+    const timer = window.setTimeout(() => setVisible(true), 1500);
+    return () => {
+      io.disconnect();
+      window.clearTimeout(timer);
+    };
   }, []);
 
   return (

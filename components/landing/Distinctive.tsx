@@ -1,10 +1,10 @@
-import { Search, Sparkles, X, Check } from "lucide-react";
-import { SectionHeading, Accent } from "@/components/ui/SectionHeading";
+import { X, Check, Sparkles } from "lucide-react";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
 
 const oldWay = [
-  "Scroll job boards for 'entry-level' roles that want 3 years of experience",
-  "Apply to internships with no idea what you'd actually build",
+  "Scroll job boards for entry-level roles that want three years of experience",
+  "Apply to internships with no idea what you would actually build",
   "Pad a résumé with coursework nobody can verify",
   "Communities with real needs never meet the people who could help",
 ];
@@ -12,89 +12,68 @@ const oldWay = [
 const newWay = [
   "A real problem is posted by someone who lives with it",
   "You see exactly what's needed, who's on the team, and who's backing it",
-  "You ship something that matters and get a verifiable credential",
+  "You ship something that matters and receive a verifiable credential",
   "Organizations fund outcomes, not applications",
+];
+
+const pillars = [
+  { k: "Every problem is an opening.", d: "No posting goes unmatched. Each need is a role waiting for a team." },
+  { k: "Every team is a portfolio.", d: "Work happens in public, with updates, milestones and backers." },
+  { k: "Every result is verified.", d: "Credentials are vouched for by the organizations who saw the work." },
 ];
 
 export function Distinctive() {
   return (
-    <section id="distinctive" className="relative py-24 sm:py-32">
+    <section id="distinctive" className="py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <Reveal>
           <SectionHeading
             eyebrow="What's distinctive"
-            title={
-              <>
-                Instead of asking people to search for opportunities, the platform{" "}
-                <Accent>generates opportunities from problems that need solving.</Accent>
-              </>
-            }
+            title="Instead of asking people to search for opportunities, the platform generates opportunities from problems that need solving."
           />
         </Reveal>
 
-        <div className="mt-16 grid gap-5 lg:grid-cols-2">
-          <Reveal>
-            <div className="relative h-full overflow-hidden rounded-3xl border border-white/8 bg-white/[0.02] p-7 sm:p-9">
-              <div className="flex items-center gap-3">
-                <span className="flex size-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/50">
-                  <Search className="size-5" />
-                </span>
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40">The old way</p>
-                  <h3 className="text-lg font-semibold text-white/80">Search for opportunities</h3>
-                </div>
-              </div>
-              <ul className="mt-7 space-y-3.5">
-                {oldWay.map((t) => (
-                  <li key={t} className="flex items-start gap-3 text-sm leading-relaxed text-white/50">
-                    <X className="mt-0.5 size-4 shrink-0 text-rose-300/70" />
-                    {t}
-                  </li>
-                ))}
-              </ul>
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-ink/60 to-transparent" />
-            </div>
+        <div className="mt-12 grid gap-px overflow-hidden rounded-lg border border-line bg-line lg:grid-cols-2">
+          <Reveal className="group bg-surface p-7 sm:p-9">
+            <p className="label">The usual way</p>
+            <h3 className="font-serif-display mt-2 text-xl text-ink">Search for opportunities</h3>
+            <ul className="mt-6 space-y-3.5">
+              {oldWay.map((t, i) => (
+                <Reveal key={t} as="li" delay={120 + i * 70} className="flex items-start gap-3 text-sm leading-relaxed text-ink-2 transition-colors duration-300 group-hover:text-ink-3">
+                  <X className="mt-0.5 size-4 shrink-0 text-ink-4" />
+                  <span className="decoration-ink-4 decoration-1 underline-offset-2 transition-all duration-300 group-hover:line-through">{t}</span>
+                </Reveal>
+              ))}
+            </ul>
           </Reveal>
 
-          <Reveal delay={120}>
-            <div className="relative h-full overflow-hidden rounded-3xl border border-brand-400/40 bg-gradient-to-br from-brand-600/25 via-ink-3/40 to-magenta-600/15 p-7 ring-glow sm:p-9">
-              <div className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-magenta-500/25 blur-3xl" />
-              <div className="relative flex items-center gap-3">
-                <span className="flex size-10 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-brand">
-                  <Sparkles className="size-5" />
-                </span>
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-200">This platform</p>
-                  <h3 className="text-lg font-semibold text-white">Opportunities generated from needs</h3>
-                </div>
-              </div>
-              <ul className="relative mt-7 space-y-3.5">
-                {newWay.map((t) => (
-                  <li key={t} className="flex items-start gap-3 text-sm leading-relaxed text-white/85">
-                    <Check className="mt-0.5 size-4 shrink-0 text-emerald-300" />
-                    {t}
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <Reveal delay={80} className="relative overflow-hidden bg-pine-50 p-7 sm:p-9">
+            <div aria-hidden className="animate-drift pointer-events-none absolute -right-16 -top-16 size-56 rounded-full bg-pine-100 blur-3xl" />
+            <p className="label relative flex items-center gap-2 text-pine-700">
+              <Sparkles className="size-3.5" /> This platform
+            </p>
+            <h3 className="font-serif-display relative mt-2 text-xl text-ink">Opportunities generated from needs</h3>
+            <ul className="relative mt-6 space-y-3.5">
+              {newWay.map((t, i) => (
+                <Reveal key={t} as="li" delay={200 + i * 70} className="flex items-start gap-3 text-sm leading-relaxed text-ink">
+                  <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-pine-700 text-white">
+                    <Check className="size-2.5" strokeWidth={3} />
+                  </span>
+                  {t}
+                </Reveal>
+              ))}
+            </ul>
           </Reveal>
         </div>
 
-        <Reveal delay={160}>
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            {[
-              { k: "Every problem", v: "is an opening", d: "No posting goes unmatched. Each need is a role waiting for a team." },
-              { k: "Every team", v: "is a portfolio", d: "Work happens in public, with updates, milestones and backers." },
-              { k: "Every result", v: "is verified", d: "Credentials are vouched for by the organizations who saw the work." },
-            ].map((x) => (
-              <div key={x.k} className="glass rounded-2xl p-5">
-                <p className="text-sm text-white/50">{x.k}</p>
-                <p className="text-xl font-semibold tracking-tight text-white">{x.v}</p>
-                <p className="mt-2 text-sm leading-relaxed text-white/55">{x.d}</p>
-              </div>
-            ))}
-          </div>
-        </Reveal>
+        <dl className="mt-6 grid gap-6 sm:grid-cols-3">
+          {pillars.map((x, i) => (
+            <Reveal key={x.k} delay={120 + i * 80} className="group border-t border-line pt-4 transition-colors duration-300 hover:border-pine-600">
+              <dt className="font-serif-display text-lg text-ink transition-colors group-hover:text-pine-700">{x.k}</dt>
+              <dd className="mt-1.5 text-sm leading-relaxed text-ink-2">{x.d}</dd>
+            </Reveal>
+          ))}
+        </dl>
       </div>
     </section>
   );

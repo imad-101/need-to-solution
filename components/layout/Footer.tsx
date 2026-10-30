@@ -49,7 +49,7 @@ export function Footer() {
               <ul className="mt-4 space-y-2.5">
                 {c.links.map((l) => (
                   <li key={l.href + l.label}>
-                    <Link href={l.href} className="text-sm text-ink-2 transition hover:text-ink">
+                    <Link href={l.href} className="link-underline text-sm text-ink-2 transition hover:text-ink">
                       {l.label}
                     </Link>
                   </li>
@@ -60,7 +60,9 @@ export function Footer() {
         </div>
         <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-line pt-6 text-xs text-ink-3 sm:flex-row sm:items-center">
           <p>© 2026 NeedToSolution. A community project platform.</p>
-          <p>Problems in, opportunities out.</p>
+          <p className="flex items-center gap-2">
+            <span className="live-dot" /> Problems in, opportunities out.
+          </p>
         </div>
       </div>
     </footer>

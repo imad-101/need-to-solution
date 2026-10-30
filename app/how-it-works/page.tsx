@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowRight, BadgeCheck, Building2, GraduationCap, Users } from "lucide-react";
+import type { CSSProperties } from "react";
+import { ArrowRight } from "lucide-react";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { Distinctive } from "@/components/landing/Distinctive";
-import { Eyebrow, Accent } from "@/components/ui/SectionHeading";
+import { Eyebrow } from "@/components/ui/SectionHeading";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 
@@ -15,7 +15,6 @@ export const metadata: Metadata = {
 const guides = [
   {
     id: "community",
-    icon: <Users className="size-5" />,
     title: "For communities",
     lead: "You know the problem better than anyone. Your job is to describe it, not to solve it.",
     steps: [
@@ -28,7 +27,6 @@ const guides = [
   },
   {
     id: "students",
-    icon: <GraduationCap className="size-5" />,
     title: "For students",
     lead: "Stop applying for experience. Build it on a problem someone actually needs solved.",
     steps: [
@@ -41,7 +39,6 @@ const guides = [
   },
   {
     id: "organizations",
-    icon: <Building2 className="size-5" />,
     title: "For organizations",
     lead: "Fund outcomes, mentor teams, and verify the work. Your name goes on the credential.",
     steps: [
@@ -54,29 +51,30 @@ const guides = [
   },
   {
     id: "credentials",
-    icon: <BadgeCheck className="size-5" />,
     title: "Verified experience",
-    lead: "A credential here is proof of real work, not a participation badge.",
+    lead: "A credential here is a record of real work, not a participation badge.",
     steps: [
       "Credentials are issued automatically when a project is marked complete by the team lead, submitter or a supporting organization.",
       "Each one records the role, skills, hours, project, team and verifier, with a public ID like NTS-7F3K-9Q2A.",
-      "Anyone can confirm a credential at /verify. It links back to the public project record with dated updates.",
+      "Anyone can confirm a credential on the verify page. It links back to the public project record with dated updates.",
       "Contributors collect credentials on their profile. Share it with employers, schools or the next team.",
     ],
     cta: { href: "/verify/NTS-7F3K-9Q2A", label: "Try the verifier" },
   },
 ];
 
+const delay = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
+
 export default function HowItWorksPage() {
   return (
-    <div className="pb-8">
-      <div className="mx-auto max-w-7xl px-4 pt-28 sm:px-6 sm:pt-32">
-        <div className="max-w-2xl">
-          <Eyebrow>How it works</Eyebrow>
-          <h1 className="mt-5 text-balance text-4xl font-semibold tracking-[-0.03em] text-white sm:text-5xl">
-            A platform where communities post real problems for <Accent>students and organizations to solve.</Accent>
+    <div>
+      <div className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 sm:pt-14">
+        <div className="max-w-2xl border-b border-line pb-8">
+          <Eyebrow className="enter">How it works</Eyebrow>
+          <h1 className="enter font-serif-display mt-3 text-balance text-4xl text-ink sm:text-5xl" style={delay(80)}>
+            A platform where communities post real problems for students and organizations to solve.
           </h1>
-          <p className="mt-4 text-pretty text-base text-white/55 sm:text-lg">
+          <p className="enter mt-4 text-pretty text-base text-ink-2 sm:text-[17px]" style={delay(160)}>
             Here is the full loop, and what each role does inside it.
           </p>
         </div>
@@ -87,21 +85,20 @@ export default function HowItWorksPage() {
       <section className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="space-y-6">
           {guides.map((g, i) => (
-            <Reveal key={g.id} delay={i * 60}>
-              <article id={g.id} className="glass grid scroll-mt-28 gap-8 rounded-[2rem] p-7 sm:p-10 lg:grid-cols-[320px_1fr]">
+            <Reveal key={g.id} delay={i * 40}>
+              <article id={g.id} className="card card-hover card-accent grid scroll-mt-24 gap-8 p-7 sm:p-9 lg:grid-cols-[300px_1fr]">
                 <div>
-                  <span className="flex size-11 items-center justify-center rounded-2xl bg-brand-gradient text-white shadow-brand">{g.icon}</span>
-                  <h2 className="mt-5 text-2xl font-semibold tracking-tight text-white">{g.title}</h2>
-                  <p className="mt-2 text-sm leading-relaxed text-white/60">{g.lead}</p>
+                  <h2 className="font-serif-display text-2xl text-ink">{g.title}</h2>
+                  <p className="mt-2 text-sm leading-relaxed text-ink-2">{g.lead}</p>
                   <Button href={g.cta.href} variant="outline" className="mt-6">
                     {g.cta.label} <ArrowRight className="size-4" />
                   </Button>
                 </div>
-                <ol className="space-y-4">
+                <ol className="divide-y divide-line">
                   {g.steps.map((s, j) => (
-                    <li key={j} className="flex gap-4 rounded-2xl border border-white/8 bg-white/[0.02] p-4">
-                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/8 font-mono text-xs text-brand-200">{j + 1}</span>
-                      <p className="text-sm leading-relaxed text-white/75">{s}</p>
+                    <li key={j} className="flex gap-4 py-4 first:pt-0 last:pb-0">
+                      <span className="tabular flex size-6 shrink-0 items-center justify-center rounded-full border border-line-strong text-[11px] font-medium text-ink-2">{j + 1}</span>
+                      <p className="text-sm leading-relaxed text-ink-2">{s}</p>
                     </li>
                   ))}
                 </ol>
@@ -113,18 +110,26 @@ export default function HowItWorksPage() {
 
       <Distinctive />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="relative overflow-hidden rounded-[2rem] border border-brand-400/30 bg-brand-gradient p-10 text-center sm:p-14">
-          <div className="pointer-events-none absolute inset-0 bg-grid opacity-20" />
-          <h2 className="relative text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl">Ready to start the loop?</h2>
-          <p className="relative mx-auto mt-3 max-w-lg text-white/80">Post a problem, join a team, or back a project. Each one creates the next opportunity.</p>
-          <div className="relative mt-7 flex flex-wrap justify-center gap-3">
-            <Button href="/problems" variant="secondary" size="lg">
+      <div className="mx-auto max-w-7xl px-4 pb-8 sm:px-6">
+        <div className="card relative flex flex-col items-start justify-between gap-6 overflow-hidden border-pine-700 bg-pine-700 p-8 text-white sm:flex-row sm:items-center sm:p-10">
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            <div className="animate-drift absolute -right-20 -top-24 size-72 rounded-full bg-pine-500/50 blur-3xl" />
+            <div
+              className="animate-drift absolute -bottom-28 left-1/3 size-64 rounded-full bg-pine-800/80 blur-3xl"
+              style={{ animationDirection: "alternate-reverse" }}
+            />
+          </div>
+          <div className="relative">
+            <h2 className="font-serif-display text-2xl sm:text-3xl">Ready to start the loop?</h2>
+            <p className="mt-2 max-w-lg text-pine-100">Post a problem, join a team, or back a project. Each one creates the next opportunity.</p>
+          </div>
+          <div className="relative flex flex-wrap gap-3">
+            <Button href="/problems" variant="outline" className="border-transparent bg-white text-pine-800 hover:bg-pine-50">
               Browse problems
             </Button>
-            <Link href="/submit" className="inline-flex h-13 items-center rounded-2xl border border-white/30 px-7 text-base font-medium text-white transition hover:bg-white/10">
+            <Button href="/submit" className="border-white/40 bg-transparent text-white hover:border-white hover:bg-white/10">
               Submit a problem
-            </Link>
+            </Button>
           </div>
         </div>
       </div>

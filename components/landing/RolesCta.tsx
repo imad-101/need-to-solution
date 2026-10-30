@@ -1,37 +1,38 @@
 "use client";
 
-import { ArrowRight, Building2, GraduationCap, Users } from "lucide-react";
+import type { CSSProperties } from "react";
+import { ArrowRight, HandHeart, Megaphone, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { SectionHeading, Accent } from "@/components/ui/SectionHeading";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
 import { CredentialCard } from "@/components/credentials/CredentialCard";
 import { usePlatform } from "@/lib/store";
 import type { Role } from "@/lib/types";
 
-const roles: Array<{ role: Role; icon: React.ReactNode; title: string; body: string; cta: string; points: string[] }> = [
+const roles: Array<{ role: Role; title: string; body: string; cta: string; points: string[]; icon: typeof Megaphone }> = [
   {
     role: "community",
-    icon: <Users className="size-5" />,
     title: "I see a problem",
     body: "Describe what your community is facing. You stay in the loop as teams form and work happens.",
     cta: "Submit a problem",
-    points: ["Takes 5 minutes", "You approve the direction", "Updates come to you"],
+    points: ["Takes about five minutes", "You approve the direction", "Updates come to you"],
+    icon: Megaphone,
   },
   {
     role: "student",
-    icon: <GraduationCap className="size-5" />,
     title: "I want to build",
     body: "Form or join a team around a problem that fits your skills. Ship something that matters.",
     cta: "Find a team",
-    points: ["Real stakes, real users", "Mentors from partner orgs", "Verified credential on completion"],
+    points: ["Real stakes, real users", "Mentors from partner organizations", "Verified credential on completion"],
+    icon: Wrench,
   },
   {
     role: "organization",
-    icon: <Building2 className="size-5" />,
     title: "I can support",
     body: "Pledge funding, mentorship or resources directly on a problem page. See exactly where it goes.",
     cta: "Back a project",
     points: ["Named teams, visible plans", "Milestone tracking", "You verify the outcome"],
+    icon: HandHeart,
   },
 ];
 
@@ -41,20 +42,19 @@ export function RolesCta() {
 
   return (
     <>
-      <section id="credentials" className="relative overflow-hidden py-24 sm:py-32">
-        <div className="mx-auto grid max-w-7xl items-center gap-14 px-4 sm:px-6 lg:grid-cols-2">
+      <section id="credentials" className="relative overflow-hidden border-t border-line bg-canvas py-20 sm:py-28">
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="bg-dots absolute inset-0 opacity-70" />
+          <div className="animate-drift absolute -bottom-32 right-[5%] size-96 rounded-full bg-pine-100/60 blur-3xl" />
+        </div>
+        <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16">
           <Reveal>
             <SectionHeading
-              align="left"
               eyebrow="Verified experience"
-              title={
-                <>
-                  Not a certificate of attendance. <Accent>Proof of work.</Accent>
-                </>
-              }
+              title="Not a certificate of attendance. A record of work."
               description="When a project completes, every contributor receives a credential with a public ID. It names the role, the skills, the hours, the project, and the organization that vouched for it. Anyone can verify it in seconds."
             />
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-7 flex flex-wrap gap-3">
               <Button href={sample ? `/verify/${sample.id}` : "/verify/NTS-7F3K-9Q2A"} variant="outline">
                 Try the verifier <ArrowRight className="size-4" />
               </Button>
@@ -63,49 +63,50 @@ export function RolesCta() {
               </Button>
             </div>
           </Reveal>
-          <Reveal delay={120}>
+          <Reveal delay={80}>
             {sample && (
-              <div className="relative">
-                <div className="pointer-events-none absolute -inset-8 rounded-[3rem] bg-gradient-to-br from-brand-500/25 to-magenta-500/15 blur-3xl" />
-                <div className="relative animate-float">
-                  <CredentialCard credential={sample} showUser />
-                </div>
+              <div className="animate-float-slow" style={{ "--tilt": "-0.6deg" } as CSSProperties}>
+                <CredentialCard credential={sample} showUser className="shadow-[0_30px_70px_-40px_rgba(27,27,25,0.45)]" />
               </div>
             )}
           </Reveal>
         </div>
       </section>
 
-      <section className="relative py-24 sm:py-32">
+      <section className="py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <Reveal>
-            <SectionHeading
-              eyebrow="Get started"
-              title={
-                <>
-                  Pick your role. <Accent>The loop starts with you.</Accent>
-                </>
-              }
-            />
+            <SectionHeading eyebrow="Get started" title="Pick your role. The loop starts with you." />
           </Reveal>
-          <div className="mt-14 grid gap-5 md:grid-cols-3">
-            {roles.map((r, i) => (
-              <Reveal key={r.role} delay={i * 90}>
-                <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/8 bg-white/[0.03] p-7 transition hover:-translate-y-1 hover:border-brand-400/40">
-                  <div className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-brand-500/0 blur-3xl transition group-hover:bg-brand-500/25" />
-                  <span className="relative flex size-11 items-center justify-center rounded-2xl bg-brand-gradient text-white shadow-brand">{r.icon}</span>
-                  <h3 className="relative mt-6 text-2xl font-semibold tracking-tight text-white">{r.title}</h3>
-                  <p className="relative mt-2 text-sm leading-relaxed text-white/60">{r.body}</p>
-                  <ul className="relative mt-5 space-y-2 text-sm text-white/70">
-                    {r.points.map((p) => (
-                      <li key={p} className="flex items-center gap-2">
-                        <span className="size-1.5 rounded-full bg-magenta-400" /> {p}
+          <div className="mt-12 grid gap-px overflow-hidden rounded-lg border border-line bg-line md:grid-cols-3">
+            {roles.map((r, i) => {
+              const Icon = r.icon;
+              const href = r.role === "community" ? "/submit" : r.role === "student" ? "/teams" : "/organizations";
+              return (
+                <Reveal
+                  key={r.role}
+                  delay={i * 90}
+                  className="card-accent group flex h-full flex-col bg-surface p-7 transition-colors duration-300 hover:bg-pine-50/40"
+                >
+                  <span className="flex size-10 items-center justify-center rounded-md border border-line bg-canvas text-ink-2 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:border-pine-200 group-hover:bg-pine-50 group-hover:text-pine-700">
+                    <Icon className="size-[18px]" />
+                  </span>
+                  <h3 className="font-serif-display mt-5 text-2xl text-ink">{r.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-ink-2">{r.body}</p>
+                  <ul className="mt-5 space-y-2 text-sm text-ink-2">
+                    {r.points.map((p, j) => (
+                      <li
+                        key={p}
+                        className="flex items-center gap-2 transition-transform duration-300 group-hover:translate-x-0.5"
+                        style={{ transitionDelay: `${j * 40}ms` }}
+                      >
+                        <span className="size-1.5 rounded-full bg-pine-600" /> {p}
                       </li>
                     ))}
                   </ul>
-                  <div className="relative mt-auto pt-7">
+                  <div className="mt-auto pt-7">
                     {currentUser?.role === r.role ? (
-                      <Button href={r.role === "community" ? "/submit" : r.role === "student" ? "/teams" : "/organizations"} className="w-full">
+                      <Button href={href} className="w-full">
                         {r.cta} <ArrowRight className="size-4" />
                       </Button>
                     ) : (
@@ -114,9 +115,9 @@ export function RolesCta() {
                       </Button>
                     )}
                   </div>
-                </div>
-              </Reveal>
-            ))}
+                </Reveal>
+              );
+            })}
           </div>
         </div>
       </section>

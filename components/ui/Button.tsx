@@ -6,9 +6,10 @@ type Variant = "primary" | "secondary" | "ghost" | "outline" | "danger";
 type Size = "sm" | "md" | "lg";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-pine-700 text-white hover:bg-pine-800 border border-pine-700 hover:border-pine-800",
-  secondary: "bg-ink text-paper hover:bg-ink-2 border border-ink hover:border-ink-2",
-  outline: "bg-surface text-ink border border-line-strong hover:border-ink-3 hover:bg-canvas",
+  primary:
+    "bg-pine-700 text-white border border-pine-700 hover:bg-pine-800 hover:border-pine-800 shadow-[0_1px_2px_rgba(24,58,40,0.18),0_10px_24px_-16px_rgba(24,58,40,0.6)] hover:shadow-[0_1px_2px_rgba(24,58,40,0.2),0_14px_28px_-14px_rgba(24,58,40,0.65)] hover:-translate-y-px",
+  secondary: "bg-ink text-paper hover:bg-ink-2 border border-ink hover:border-ink-2 hover:-translate-y-px",
+  outline: "bg-surface text-ink border border-line-strong hover:border-ink-3 hover:bg-canvas hover:-translate-y-px",
   ghost: "text-ink-2 hover:text-ink hover:bg-canvas border border-transparent",
   danger: "text-red-600 border border-red-600/30 hover:bg-red-50",
 };
@@ -20,7 +21,7 @@ const sizes: Record<Size, string> = {
 };
 
 const base =
-  "inline-flex items-center justify-center font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pine-600/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap select-none";
+  "icon-nudge inline-flex items-center justify-center font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-200 ease-out active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pine-600/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap select-none";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;

@@ -1,4 +1,4 @@
-import type { ProblemStatus, Urgency, PledgeType, Role } from "./types";
+import type { ProblemStatus, Urgency, PledgeType, Role, ReviewStatus } from "./types";
 
 export function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
@@ -75,6 +75,19 @@ export const roleStyles: Record<Role, string> = {
   community: "bg-pine-50 text-pine-700 border-pine-100",
   student: "bg-blue-50 text-blue-700 border-blue-50",
   organization: "bg-rust-50 text-rust-700 border-rust-50",
+  admin: "bg-ink text-paper border-ink",
+};
+
+export const reviewStyles: Record<ReviewStatus, string> = {
+  pending: "bg-amber-50 text-amber-700 border-amber-50",
+  approved: "bg-pine-50 text-pine-700 border-pine-100",
+  rejected: "bg-red-50 text-red-600 border-red-50",
+};
+
+export const reviewDot: Record<ReviewStatus, string> = {
+  pending: "bg-amber-600",
+  approved: "bg-pine-500",
+  rejected: "bg-red-600",
 };
 
 export function pluralize(n: number, word: string, plural = `${word}s`) {

@@ -6,8 +6,8 @@ import { Badge, Chip } from "@/components/ui/Badge";
 import { Avatar, AvatarStack } from "@/components/ui/Avatar";
 import { usePlatform } from "@/lib/store";
 import type { Problem } from "@/lib/types";
-import { STATUS_LABEL } from "@/lib/types";
-import { cn, statusDot, statusStyles, pluralize } from "@/lib/utils";
+import { REVIEW_LABEL, STATUS_LABEL } from "@/lib/types";
+import { cn, reviewDot, reviewStyles, statusDot, statusStyles, pluralize } from "@/lib/utils";
 
 export function ProblemCard({ problem, compact = false }: { problem: Problem; compact?: boolean }) {
   const { userById, teamsForProblem, pledgesForProblem, currentUser, toggleUpvote, state } = usePlatform();
@@ -21,10 +21,15 @@ export function ProblemCard({ problem, compact = false }: { problem: Problem; co
   const upvoted = !!currentUser && problem.upvotes.includes(currentUser.id);
 
   return (
-    <article className="card card-hover group flex h-full flex-col">
+    <article className="card card-hover card-accent group flex h-full flex-col">
       <div className="flex flex-1 flex-col p-5">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-1.5">
+            {problem.reviewStatus !== "approved" && (
+              <Badge className={reviewStyles[problem.reviewStatus]} dot={reviewDot[problem.reviewStatus]}>
+                {REVIEW_LABEL[problem.reviewStatus]}
+              </Badge>
+            )}
             <Badge className={statusStyles[problem.status]} dot={statusDot[problem.status]}>
               {STATUS_LABEL[problem.status]}
             </Badge>
@@ -41,12 +46,12 @@ export function ProblemCard({ problem, compact = false }: { problem: Problem; co
               toggleUpvote(problem.id);
             }}
             className={cn(
-              "tabular inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium transition",
+              "tabular inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium transition active:scale-90",
               upvoted ? "border-pine-600 bg-pine-50 text-pine-700" : "border-line text-ink-3 hover:border-ink-3 hover:text-ink",
             )}
             aria-label="Upvote"
           >
-            <ArrowBigUp className={cn("size-4", upvoted && "fill-current")} />
+            <ArrowBigUp className={cn("size-4", upvoted && "animate-pop fill-current")} />
             {problem.upvotes.length}
           </button>
         </div>

@@ -1,75 +1,81 @@
-import { BadgeCheck, Building2, GraduationCap, MessageSquareText } from "lucide-react";
-import { SectionHeading, Accent } from "@/components/ui/SectionHeading";
+import { ArrowRight, BadgeCheck, HandCoins, Megaphone, Users } from "lucide-react";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
 
 const steps = [
   {
-    icon: <MessageSquareText className="size-5" />,
-    title: "Community members submit problems.",
+    who: "Community members",
+    title: "submit problems.",
     body: "A nurse, a principal, a farmer. Anyone who sees a need describes it plainly: what is happening, who it affects, what help would change it.",
-    tag: "Need",
-    accent: "from-emerald-400/30 to-emerald-400/0",
+    icon: Megaphone,
   },
   {
-    icon: <GraduationCap className="size-5" />,
-    title: "Students form teams around real challenges.",
+    who: "Students",
+    title: "form teams around real challenges.",
     body: "Medicine, design, engineering, data. Students pick a problem, form a team, define the roles they still need, and recruit the rest.",
-    tag: "Team",
-    accent: "from-sky-400/30 to-sky-400/0",
+    icon: Users,
   },
   {
-    icon: <Building2 className="size-5" />,
-    title: "Organizations provide funding, mentorship, or resources.",
+    who: "Organizations",
+    title: "provide funding, mentorship, or resources.",
     body: "NGOs, companies and universities pledge directly on a problem page. Support goes to a named team and a visible plan.",
-    tag: "Support",
-    accent: "from-amber-400/30 to-amber-400/0",
+    icon: HandCoins,
   },
   {
-    icon: <BadgeCheck className="size-5" />,
-    title: "Contributors earn verified project experience.",
+    who: "Contributors",
+    title: "earn verified project experience.",
     body: "When the project ships, every contributor receives a public, verifiable credential tied to the real work and vouched for by the supporting organization.",
-    tag: "Proof",
-    accent: "from-fuchsia-400/30 to-fuchsia-400/0",
+    icon: BadgeCheck,
   },
 ];
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="relative py-24 sm:py-32">
+    <section id="how-it-works" className="py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <Reveal>
           <SectionHeading
             eyebrow="How it works"
-            title={
-              <>
-                Four roles. One loop. <Accent>No searching required.</Accent>
-              </>
-            }
+            title="Four roles, one loop."
             description="Each step creates the conditions for the next. A problem becomes a team, a team attracts support, support produces results, results become proof."
           />
         </Reveal>
 
-        <div className="relative mt-16">
-          <div className="pointer-events-none absolute left-0 right-0 top-[52px] hidden h-px bg-gradient-to-r from-transparent via-white/15 to-transparent lg:block" />
-          <div className="grid gap-5 lg:grid-cols-4">
-            {steps.map((s, i) => (
-              <Reveal key={s.title} delay={i * 90}>
-                <div className="group relative h-full overflow-hidden rounded-3xl border border-white/8 bg-white/[0.03] p-6 transition hover:-translate-y-1 hover:border-white/20">
-                  <div className={`pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b ${s.accent} opacity-60 transition group-hover:opacity-100`} />
-                  <div className="relative flex items-center justify-between">
-                    <span className="flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-ink/70 text-white shadow-lg">
-                      {s.icon}
-                    </span>
-                    <span className="font-mono text-xs text-white/35">0{i + 1}</span>
-                  </div>
-                  <p className="relative mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/40">{s.tag}</p>
-                  <h3 className="relative mt-2 text-lg font-semibold leading-snug tracking-tight text-white">{s.title}</h3>
-                  <p className="relative mt-3 text-sm leading-relaxed text-white/58">{s.body}</p>
+        <ol className="mt-12 grid gap-px overflow-hidden rounded-lg border border-line bg-line md:grid-cols-2 xl:grid-cols-4">
+          {steps.map((s, i) => {
+            const Icon = s.icon;
+            return (
+              <Reveal
+                key={s.who}
+                as="li"
+                delay={i * 90}
+                className="card-accent group flex flex-col bg-surface p-6 transition-colors duration-300 hover:bg-pine-50/40 sm:p-7"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="flex size-9 items-center justify-center rounded-md border border-line bg-canvas text-ink-2 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:border-pine-200 group-hover:bg-pine-50 group-hover:text-pine-700">
+                    <Icon className="size-4" />
+                  </span>
+                  <span className="tabular font-mono text-xs text-ink-3 transition-colors group-hover:text-pine-700">0{i + 1}</span>
                 </div>
+                <h3 className="font-serif-display mt-5 text-xl leading-snug text-ink">
+                  <span className="text-pine-700">{s.who}</span> {s.title}
+                </h3>
+                <p className="mt-3 text-sm leading-relaxed text-ink-2">{s.body}</p>
+                {i < steps.length - 1 && (
+                  <span className="mt-auto flex items-center gap-1.5 pt-6 text-[11px] font-medium uppercase tracking-[0.1em] text-ink-4 transition-colors group-hover:text-pine-700">
+                    Next
+                    <ArrowRight className="size-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+                  </span>
+                )}
+                {i === steps.length - 1 && (
+                  <span className="mt-auto flex items-center gap-1.5 pt-6 text-[11px] font-medium uppercase tracking-[0.1em] text-ink-4 transition-colors group-hover:text-pine-700">
+                    Back to the start
+                  </span>
+                )}
               </Reveal>
-            ))}
-          </div>
-        </div>
+            );
+          })}
+        </ol>
       </div>
     </section>
   );

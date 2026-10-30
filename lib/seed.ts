@@ -1,8 +1,9 @@
-import type { PlatformState } from "./types";
+import type { PlatformState, Problem } from "./types";
 
-export const STORAGE_KEY = "need-to-solution:v1";
+/** Demo data loaded into the database by `npm run db:seed`. Problems are approved on insert. */
+export type SeedState = Omit<PlatformState, "problems"> & { problems: Array<Omit<Problem, "reviewStatus">> };
 
-export const seedState: PlatformState = {
+export const seedState: SeedState = {
   currentUserId: null,
   users: [
     {

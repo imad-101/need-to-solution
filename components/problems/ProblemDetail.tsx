@@ -30,8 +30,8 @@ import { Progress } from "@/components/ui/Progress";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CredentialCard } from "@/components/credentials/CredentialCard";
 import { usePlatform } from "@/lib/store";
-import { PLEDGE_LABEL, STATUS_LABEL, type PledgeType, type Team } from "@/lib/types";
-import { cn, formatDate, formatMoney, pledgeStyles, statusDot, statusStyles, urgencyStyles } from "@/lib/utils";
+import { PLEDGE_LABEL, REVIEW_LABEL, STATUS_LABEL, type PledgeType, type Team } from "@/lib/types";
+import { cn, formatDate, formatMoney, pledgeStyles, reviewDot, reviewStyles, statusDot, statusStyles, urgencyStyles } from "@/lib/utils";
 
 export function ProblemDetail({ id }: { id: string }) {
   const platform = usePlatform();
@@ -58,7 +58,9 @@ export function ProblemDetail({ id }: { id: string }) {
   const isLead = !!currentUser && teams.some((t) => t.leadId === currentUser.id);
   const isAuthor = currentUser?.id === problem.submittedBy;
   const isSupporter = !!currentUser && pledges.some((p) => p.orgId === currentUser.id);
-  const canPost = isMember || isAuthor || isSupporter;
+  const isAdmin = currentUser?.role === "admin";
+  const canPost = isMember || isAuthor || isSupporter || isAdmin;
+  const approved = problem.reviewStatus === "approved";
   const doneCount = problem.milestones.filter((m) => m.done).length;
   const progress = problem.milestones.length ? (doneCount / problem.milestones.length) * 100 : 0;
   const totalFunding = pledges.reduce((n, p) => n + (p.amount ?? 0), 0);
@@ -83,9 +85,39 @@ export function ProblemDetail({ id }: { id: string }) {
         <ArrowLeft className="size-4" /> All problems
       </Link>
 
+      {!approved && (
+        <div
+          className={cn(
+            "mt-6 flex flex-wrap items-start gap-3 rounded-lg border p-4 text-sm",
+            problem.reviewStatus === "pending" ? "border-amber-600/30 bg-amber-50 text-amber-700" : "border-red-600/30 bg-red-50 text-red-600",
+          )}
+        >
+          <div className="flex-1">
+            <p className="font-medium">
+              {problem.reviewStatus === "pending" ? "Waiting for an administrator to review this problem" : "This problem was not approved"}
+            </p>
+            <p className="mt-0.5 opacity-80">
+              {problem.reviewStatus === "pending"
+                ? "Only you can see it for now. Once approved it becomes public and teams can form around it."
+                : problem.reviewNote || "No note was left by the reviewer. You can submit a revised version."}
+            </p>
+          </div>
+          {isAdmin && problem.reviewStatus === "pending" && (
+            <Button size="sm" href="/admin">
+              Open review queue
+            </Button>
+          )}
+        </div>
+      )}
+
       {/* Header */}
       <header className="mt-6 border-b border-line pb-8">
         <div className="flex flex-wrap items-center gap-2">
+          {!approved && (
+            <Badge className={reviewStyles[problem.reviewStatus]} dot={reviewDot[problem.reviewStatus]}>
+              {REVIEW_LABEL[problem.reviewStatus]}
+            </Badge>
+          )}
           <Badge className={statusStyles[problem.status]} dot={statusDot[problem.status]}>
             {STATUS_LABEL[problem.status]}
           </Badge>
@@ -120,7 +152,7 @@ export function ProblemDetail({ id }: { id: string }) {
             <ArrowBigUp className={cn("size-5", upvoted && "fill-current")} />
             {problem.upvotes.length} {upvoted ? "Backed" : "Back this"}
           </button>
-          {problem.status !== "completed" && (
+          {problem.status !== "completed" && approved && (
             <>
               <Button onClick={() => (currentUser?.role === "student" ? setTeamModal(true) : openAuth("student"))}>
                 <Users className="size-4" /> Form a team
@@ -174,7 +206,7 @@ export function ProblemDetail({ id }: { id: string }) {
               <h2 className="label">
                 Teams <span className="text-ink-4">({teams.length})</span>
               </h2>
-              {problem.status !== "completed" && currentUser?.role === "student" && !isMember && (
+              {problem.status !== "completed" && approved && currentUser?.role === "student" && !isMember && (
                 <Button size="sm" variant="outline" onClick={() => setTeamModal(true)}>
                   <Plus className="size-4" /> New team
                 </Button>
@@ -184,11 +216,13 @@ export function ProblemDetail({ id }: { id: string }) {
               <EmptyState
                 icon={<Users className="size-5" />}
                 title="No team yet"
-                description="Start a team, define the roles you need, and other students can join you."
+                description={approved ? "Start a team, define the roles you need, and other students can join you." : "Teams can form once the problem is approved."}
                 action={
-                  <Button onClick={() => (currentUser?.role === "student" ? setTeamModal(true) : openAuth("student"))}>
-                    Form the first team
-                  </Button>
+                  approved ? (
+                    <Button onClick={() => (currentUser?.role === "student" ? setTeamModal(true) : openAuth("student"))}>
+                      Form the first team
+                    </Button>
+                  ) : undefined
                 }
               />
             ) : (
@@ -262,7 +296,7 @@ export function ProblemDetail({ id }: { id: string }) {
             <section>
               <div className="mb-3 flex items-center gap-2">
                 <BadgeCheck className="size-4 text-pine-600" />
-                <h2 className="label">Credentials issued</h2>
+                <h2 className="label">Certificates issued</h2>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 {credentials.map((c) => (
@@ -301,14 +335,14 @@ export function ProblemDetail({ id }: { id: string }) {
               })}
             </ol>
 
-            {isLead && problem.status === "forming" && (
+            {(isLead || isAdmin) && problem.status === "forming" && (
               <Button className="mt-5 w-full" onClick={() => platform.startProject(problem.id)}>
                 <Rocket className="size-4" /> Start the project
               </Button>
             )}
-            {(isLead || isSupporter || isAuthor) && problem.status === "in-progress" && (
+            {(isLead || isSupporter || isAuthor || isAdmin) && problem.status === "in-progress" && (
               <Button className="mt-5 w-full" onClick={() => platform.completeProject(problem.id)}>
-                <BadgeCheck className="size-4" /> Mark complete and issue credentials
+                <BadgeCheck className="size-4" /> Mark complete and issue certificates
               </Button>
             )}
             {problem.status === "completed" && problem.completedAt && <p className="mt-4 text-xs text-ink-3">Completed {formatDate(problem.completedAt)}</p>}
@@ -346,7 +380,7 @@ export function ProblemDetail({ id }: { id: string }) {
                 })}
               </ul>
             )}
-            {problem.status !== "completed" && (
+            {problem.status !== "completed" && approved && (
               <Button variant="outline" className="mt-4 w-full" onClick={() => (currentUser?.role === "organization" ? setPledgeModal(true) : openAuth("organization"))}>
                 <HandCoins className="size-4" /> Pledge support
               </Button>
@@ -508,9 +542,9 @@ function CreateTeamModal({ open, onClose, problemId, needs }: { open: boolean; o
   return (
     <Modal open={open} onClose={onClose} title="Form a team" description="Describe your approach and the roles you still need.">
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
-          const t = createTeam(problemId, { name, pitch, openRoles, myRole });
+          const t = await createTeam(problemId, { name, pitch, openRoles, myRole });
           if (t) {
             onClose();
             setName("");
@@ -609,9 +643,9 @@ function PledgeModal({ open, onClose, problemId }: { open: boolean; onClose: () 
   return (
     <Modal open={open} onClose={onClose} title="Pledge support" description="Tell the team exactly what you can provide.">
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
-          const p = pledgeSupport(problemId, { type, amount: amount ? Number(amount) : undefined, details });
+          const p = await pledgeSupport(problemId, { type, amount: amount ? Number(amount) : undefined, details });
           if (p) {
             onClose();
             setAmount("");

@@ -1,83 +1,12 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useState, type ReactNode } from "react";
-import type {
-  Category,
-  Credential,
-  PlatformState,
-  Pledge,
-  PledgeType,
-  Problem,
-  Role,
-  Team,
-  Urgency,
-  User,
-} from "./types";
-import { seedState, STORAGE_KEY } from "./seed";
-import { credentialId, uid } from "./utils";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import * as actions from "@/lib/actions";
+import type { ActionResult, SignUpInput, SubmitProblemInput } from "@/lib/actions";
+import type { ClientState, Credential, CurrentUser, PlatformState, Pledge, PledgeType, Problem, ReviewStatus, Role, Team, User } from "@/lib/types";
+import { uid } from "./utils";
 
-/* ----------------------------- Reducer ----------------------------- */
-
-interface StoreState {
-  data: PlatformState;
-  hydrated: boolean;
-}
-
-type Action =
-  | { type: "HYDRATE"; state: PlatformState | null }
-  | { type: "RESET" }
-  | { type: "SET_CURRENT"; userId: string | null }
-  | { type: "ADD_USER"; user: User }
-  | { type: "ADD_PROBLEM"; problem: Problem }
-  | { type: "UPDATE_PROBLEM"; id: string; patch: Partial<Problem> | ((p: Problem) => Partial<Problem>) }
-  | { type: "ADD_TEAM"; team: Team }
-  | { type: "UPDATE_TEAM"; id: string; patch: Partial<Team> | ((t: Team) => Partial<Team>) }
-  | { type: "ADD_PLEDGE"; pledge: Pledge }
-  | { type: "ADD_CREDENTIALS"; credentials: Credential[] };
-
-function dataReducer(state: PlatformState, action: Action): PlatformState {
-  switch (action.type) {
-    case "HYDRATE":
-      return action.state ?? state;
-    case "RESET":
-      return { ...seedState, currentUserId: null };
-    case "SET_CURRENT":
-      return { ...state, currentUserId: action.userId };
-    case "ADD_USER":
-      return { ...state, users: [...state.users, action.user] };
-    case "ADD_PROBLEM":
-      return { ...state, problems: [action.problem, ...state.problems] };
-    case "UPDATE_PROBLEM":
-      return {
-        ...state,
-        problems: state.problems.map((p) =>
-          p.id === action.id ? { ...p, ...(typeof action.patch === "function" ? action.patch(p) : action.patch) } : p,
-        ),
-      };
-    case "ADD_TEAM":
-      return { ...state, teams: [...state.teams, action.team] };
-    case "UPDATE_TEAM":
-      return {
-        ...state,
-        teams: state.teams.map((t) =>
-          t.id === action.id ? { ...t, ...(typeof action.patch === "function" ? action.patch(t) : action.patch) } : t,
-        ),
-      };
-    case "ADD_PLEDGE":
-      return { ...state, pledges: [...state.pledges, action.pledge] };
-    case "ADD_CREDENTIALS":
-      return { ...state, credentials: [...state.credentials, ...action.credentials] };
-    default:
-      return state;
-  }
-}
-
-function reducer(state: StoreState, action: Action): StoreState {
-  return {
-    data: dataReducer(state.data, action),
-    hydrated: state.hydrated || action.type === "HYDRATE",
-  };
-}
+export type { SignUpInput, SubmitProblemInput };
 
 /* ----------------------------- Toasts ----------------------------- */
 
@@ -90,30 +19,13 @@ export interface Toast {
 
 /* ----------------------------- Context ----------------------------- */
 
-export interface SignInInput {
-  name: string;
-  role: Role;
-  headline?: string;
-  location?: string;
-  skills?: string[];
-  orgType?: User["orgType"];
-}
-
-export interface SubmitProblemInput {
-  title: string;
-  summary: string;
-  description: string;
-  category: Category;
-  location: string;
-  needs: string[];
-  impact: string;
-  urgency: Urgency;
-}
-
 interface PlatformContextValue {
   state: PlatformState;
+  /** Always true now that state arrives from the server; kept so existing screens keep working. */
   hydrated: boolean;
-  currentUser: User | null;
+  /** True while a mutation is in flight. */
+  busy: boolean;
+  currentUser: CurrentUser | null;
   toasts: Toast[];
   authOpen: boolean;
   authRole: Role | null;
@@ -121,21 +33,22 @@ interface PlatformContextValue {
   closeAuth: () => void;
   dismissToast: (id: string) => void;
   notify: (toast: Omit<Toast, "id">) => void;
-  signIn: (input: SignInInput) => User;
-  signInAs: (userId: string) => void;
-  signOut: () => void;
-  resetDemo: () => void;
-  submitProblem: (input: SubmitProblemInput) => Problem | null;
-  toggleUpvote: (problemId: string) => void;
-  createTeam: (problemId: string, input: { name: string; pitch: string; openRoles: string[]; myRole: string }) => Team | null;
-  joinTeam: (teamId: string, role: string) => void;
-  leaveTeam: (teamId: string) => void;
-  pledgeSupport: (problemId: string, input: { type: PledgeType; amount?: number; details: string }) => Pledge | null;
-  postUpdate: (problemId: string, text: string) => void;
-  addMilestone: (problemId: string, title: string) => void;
-  toggleMilestone: (problemId: string, milestoneId: string) => void;
-  startProject: (problemId: string) => void;
-  completeProject: (problemId: string) => void;
+  refresh: () => Promise<void>;
+  signIn: (input: { email: string; password: string }) => Promise<CurrentUser | null>;
+  signUp: (input: SignUpInput) => Promise<CurrentUser | null>;
+  signOut: () => Promise<void>;
+  submitProblem: (input: SubmitProblemInput) => Promise<{ id: string; reviewStatus: ReviewStatus } | null>;
+  toggleUpvote: (problemId: string) => Promise<void>;
+  createTeam: (problemId: string, input: { name: string; pitch: string; openRoles: string[]; myRole: string }) => Promise<Team | null>;
+  joinTeam: (teamId: string, role: string) => Promise<void>;
+  leaveTeam: (teamId: string) => Promise<void>;
+  pledgeSupport: (problemId: string, input: { type: PledgeType; amount?: number; details: string }) => Promise<Pledge | null>;
+  postUpdate: (problemId: string, text: string) => Promise<void>;
+  addMilestone: (problemId: string, title: string) => Promise<void>;
+  toggleMilestone: (problemId: string, milestoneId: string) => Promise<void>;
+  startProject: (problemId: string) => Promise<void>;
+  completeProject: (problemId: string) => Promise<void>;
+  reviewProblem: (problemId: string, decision: "approved" | "rejected", note?: string) => Promise<boolean>;
   userById: (id: string) => User | undefined;
   problemById: (id: string) => Problem | undefined;
   teamsForProblem: (problemId: string) => Team[];
@@ -150,42 +63,26 @@ interface PlatformContextValue {
 
 const PlatformContext = createContext<PlatformContextValue | null>(null);
 
-function readStorage(): PlatformState | null {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as PlatformState;
-    return parsed && Array.isArray(parsed.problems) ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-export function PlatformProvider({ children }: { children: ReactNode }) {
-  const [{ data, hydrated }, dispatch] = useReducer(reducer, { data: seedState, hydrated: false });
+export function PlatformProvider({ initial, children }: { initial: ClientState; children: ReactNode }) {
+  const [client, setClient] = useState<ClientState>(initial);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [authOpen, setAuthOpen] = useState(false);
   const [authRole, setAuthRole] = useState<Role | null>(null);
+  const [inFlight, setInFlight] = useState(0);
+  const lastInitial = useRef(initial);
 
-  // Persist after hydration. Declared before the hydrate effect so the first
-  // run (hydrated === false) never overwrites stored data with the seed.
+  // A full server render (reload, router.refresh) hands us fresh state.
   useEffect(() => {
-    if (!hydrated) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch {
-      /* storage may be unavailable */
+    if (lastInitial.current !== initial) {
+      lastInitial.current = initial;
+      setClient(initial);
     }
-  }, [data, hydrated]);
-
-  useEffect(() => {
-    dispatch({ type: "HYDRATE", state: readStorage() });
-  }, []);
+  }, [initial]);
 
   const notify = useCallback((toast: Omit<Toast, "id">) => {
     const id = uid("toast");
     setToasts((t) => [...t, { ...toast, id }]);
-    window.setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4200);
+    window.setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4600);
   }, []);
 
   const dismissToast = useCallback((id: string) => setToasts((t) => t.filter((x) => x.id !== id)), []);
@@ -196,9 +93,50 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
   }, []);
   const closeAuth = useCallback(() => setAuthOpen(false), []);
 
+  const refresh = useCallback(async () => {
+    try {
+      setClient(await actions.getState());
+    } catch {
+      /* offline: keep what we have */
+    }
+  }, []);
+
+  // Pick up changes made elsewhere (another tab, an admin approving something) when the tab regains focus.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [refresh]);
+
+  /** Applies an action result: swaps in the new state, or toasts the error. */
+  const apply = useCallback(
+    async <T,>(promise: Promise<ActionResult<T>>, success?: (data: T, next: ClientState) => Omit<Toast, "id"> | void): Promise<T | null> => {
+      setInFlight((n) => n + 1);
+      try {
+        const result = await promise;
+        if (!result.ok) {
+          notify({ title: result.error, tone: "error" });
+          return null;
+        }
+        setClient(result.state);
+        const toast = success?.(result.data, result.state);
+        if (toast) notify(toast);
+        return result.data;
+      } catch {
+        notify({ title: "Could not reach the server", description: "Check your connection and try again.", tone: "error" });
+        return null;
+      } finally {
+        setInFlight((n) => n - 1);
+      }
+    },
+    [notify],
+  );
+
   const value = useMemo<PlatformContextValue>(() => {
-    const s = data;
-    const currentUser = s.users.find((u) => u.id === s.currentUserId) ?? null;
+    const s = client.state;
+    const currentUser = client.currentUser;
 
     /* ---------- selectors ---------- */
     const userById = (id: string) => s.users.find((u) => u.id === id);
@@ -211,17 +149,18 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
     const pledgesForOrg = (orgId: string) => s.pledges.filter((p) => p.orgId === orgId);
     const isTeamMember = (problemId: string, userId: string) =>
       s.teams.some((t) => t.problemId === problemId && t.memberIds.includes(userId));
-    const canAct = (role: Role) => !!currentUser && currentUser.role === role;
+    const canAct = (role: Role) => !!currentUser && (currentUser.role === role || currentUser.role === "admin");
 
-    const requireUser = (role?: Role): User | null => {
+    /** Client-side gate: opens the sign-in modal or explains the role mismatch before calling the server. */
+    const requireUser = (role?: Role): CurrentUser | null => {
       if (!currentUser) {
         openAuth(role);
         return null;
       }
-      if (role && currentUser.role !== role) {
+      if (role && currentUser.role !== role && currentUser.role !== "admin") {
         notify({
           title: `This action is for ${role === "organization" ? "organizations" : role + "s"}`,
-          description: `You are signed in as ${currentUser.role === "organization" ? "an organization" : "a " + currentUser.role}. Switch account to continue.`,
+          description: `You are signed in as ${currentUser.role === "organization" ? "an organization" : "a " + currentUser.role}.`,
           tone: "info",
         });
         return null;
@@ -230,266 +169,116 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
     };
 
     /* ---------- auth ---------- */
-    const signIn = (input: SignInInput) => {
-      const existing = s.users.find(
-        (u) => u.name.trim().toLowerCase() === input.name.trim().toLowerCase() && u.role === input.role,
-      );
-      if (existing) {
-        dispatch({ type: "SET_CURRENT", userId: existing.id });
-        setAuthOpen(false);
-        notify({ title: `Welcome back, ${existing.name.split(" ")[0]}`, tone: "success" });
-        return existing;
-      }
-      const user: User = {
-        id: uid("u"),
-        name: input.name.trim(),
-        role: input.role,
-        headline:
-          input.headline?.trim() ||
-          (input.role === "community" ? "Community member" : input.role === "student" ? "Student" : "Organization"),
-        location: input.location?.trim() || "Remote",
-        skills: input.skills ?? [],
-        avatarHue: Math.floor(Math.random() * 360),
-        orgType: input.role === "organization" ? (input.orgType ?? "NGO") : undefined,
-        joinedAt: new Date().toISOString(),
-      };
-      dispatch({ type: "ADD_USER", user });
-      dispatch({ type: "SET_CURRENT", userId: user.id });
-      setAuthOpen(false);
-      notify({ title: `Welcome, ${user.name.split(" ")[0]}`, description: "Your account is ready.", tone: "success" });
+    const signIn = async (input: { email: string; password: string }) => {
+      const user = await apply(actions.signIn(input), (u) => ({ title: `Welcome back, ${u.name.split(" ")[0]}`, tone: "success" }));
+      if (user) setAuthOpen(false);
       return user;
     };
 
-    const signInAs = (userId: string) => {
-      const user = userById(userId);
-      if (!user) return;
-      dispatch({ type: "SET_CURRENT", userId });
-      setAuthOpen(false);
-      notify({ title: `Signed in as ${user.name}`, tone: "success" });
+    const signUp = async (input: SignUpInput) => {
+      const user = await apply(actions.signUp(input), (u) => ({ title: `Welcome, ${u.name.split(" ")[0]}`, description: "Your account is ready.", tone: "success" }));
+      if (user) setAuthOpen(false);
+      return user;
     };
 
-    const signOut = () => {
-      dispatch({ type: "SET_CURRENT", userId: null });
-      notify({ title: "Signed out", tone: "info" });
-    };
-
-    const resetDemo = () => {
-      dispatch({ type: "RESET" });
-      notify({ title: "Demo data reset", tone: "info" });
+    const signOut = async () => {
+      await apply(actions.signOut(), () => ({ title: "Signed out", tone: "info" }));
     };
 
     /* ---------- problems ---------- */
-    const submitProblem = (input: SubmitProblemInput) => {
-      const user = requireUser("community");
-      if (!user) return null;
-      const problem: Problem = {
-        id: uid("p"),
-        ...input,
-        submittedBy: user.id,
-        createdAt: new Date().toISOString(),
-        status: "open",
-        upvotes: [],
-        updates: [],
-        milestones: [],
-      };
-      dispatch({ type: "ADD_PROBLEM", problem });
-      notify({ title: "Problem published", description: "Students and organizations can now find it.", tone: "success" });
-      return problem;
+    const submitProblem = async (input: SubmitProblemInput) => {
+      if (!requireUser()) return null;
+      return apply(actions.submitProblem(input), (r) =>
+        r.reviewStatus === "approved"
+          ? { title: "Problem published", description: "Students and organizations can now find it.", tone: "success" }
+          : { title: "Submitted for review", description: "An administrator will check it before it goes live.", tone: "success" },
+      );
     };
 
-    const toggleUpvote = (problemId: string) => {
-      const user = requireUser();
-      if (!user) return;
-      dispatch({
-        type: "UPDATE_PROBLEM",
-        id: problemId,
-        patch: (p) => ({
-          upvotes: p.upvotes.includes(user.id) ? p.upvotes.filter((x) => x !== user.id) : [...p.upvotes, user.id],
-        }),
-      });
+    const toggleUpvote = async (problemId: string) => {
+      if (!requireUser()) return;
+      await apply(actions.toggleUpvote(problemId));
     };
 
     /* ---------- teams ---------- */
-    const createTeam = (problemId: string, input: { name: string; pitch: string; openRoles: string[]; myRole: string }) => {
-      const user = requireUser("student");
-      if (!user) return null;
-      const team: Team = {
-        id: uid("t"),
-        problemId,
-        name: input.name.trim(),
-        pitch: input.pitch.trim(),
-        leadId: user.id,
-        memberIds: [user.id],
-        memberRoles: { [user.id]: input.myRole.trim() || "Team lead" },
-        openRoles: input.openRoles,
-        createdAt: new Date().toISOString(),
-      };
-      dispatch({ type: "ADD_TEAM", team });
-      dispatch({ type: "UPDATE_PROBLEM", id: problemId, patch: (p) => (p.status === "open" ? { status: "forming" } : {}) });
-      notify({ title: `${team.name} created`, description: "Open roles are now visible to other students.", tone: "success" });
-      return team;
+    const createTeam = async (problemId: string, input: { name: string; pitch: string; openRoles: string[]; myRole: string }) => {
+      if (!requireUser("student")) return null;
+      let created: Team | null = null;
+      await apply(actions.createTeam(problemId, input), (r, next) => {
+        created = next.state.teams.find((t) => t.id === r.id) ?? null;
+        return { title: `${input.name.trim()} created`, description: "Open roles are now visible to other students.", tone: "success" };
+      });
+      return created;
     };
 
-    const joinTeam = (teamId: string, role: string) => {
-      const user = requireUser("student");
-      if (!user) return;
+    const joinTeam = async (teamId: string, role: string) => {
+      if (!requireUser("student")) return;
       const team = s.teams.find((t) => t.id === teamId);
-      if (!team || team.memberIds.includes(user.id)) return;
-      dispatch({
-        type: "UPDATE_TEAM",
-        id: teamId,
-        patch: (t) => ({
-          memberIds: [...t.memberIds, user.id],
-          memberRoles: { ...t.memberRoles, [user.id]: role },
-          openRoles: t.openRoles.filter((r) => r !== role),
-        }),
-      });
-      notify({ title: `You joined ${team.name}`, description: `Role: ${role}`, tone: "success" });
+      await apply(actions.joinTeam(teamId, role), () => ({ title: `You joined ${team?.name ?? "the team"}`, description: `Role: ${role}`, tone: "success" }));
     };
 
-    const leaveTeam = (teamId: string) => {
-      const user = requireUser("student");
-      if (!user) return;
+    const leaveTeam = async (teamId: string) => {
+      if (!requireUser("student")) return;
       const team = s.teams.find((t) => t.id === teamId);
-      if (!team) return;
-      if (team.leadId === user.id) {
-        notify({ title: "Team leads can't leave", description: "Hand over the lead role first.", tone: "error" });
-        return;
-      }
-      const role = team.memberRoles[user.id];
-      dispatch({
-        type: "UPDATE_TEAM",
-        id: teamId,
-        patch: (t) => {
-          const roles = { ...t.memberRoles };
-          delete roles[user.id];
-          return {
-            memberIds: t.memberIds.filter((m) => m !== user.id),
-            memberRoles: roles,
-            openRoles: role ? [...t.openRoles, role] : t.openRoles,
-          };
-        },
-      });
-      notify({ title: `You left ${team.name}`, tone: "info" });
+      await apply(actions.leaveTeam(teamId), () => ({ title: `You left ${team?.name ?? "the team"}`, tone: "info" }));
     };
 
     /* ---------- pledges ---------- */
-    const pledgeSupport = (problemId: string, input: { type: PledgeType; amount?: number; details: string }) => {
-      const user = requireUser("organization");
-      if (!user) return null;
-      const pledge: Pledge = {
-        id: uid("pl"),
-        problemId,
-        orgId: user.id,
-        type: input.type,
-        amount: input.type === "funding" ? input.amount : undefined,
-        details: input.details.trim(),
-        createdAt: new Date().toISOString(),
-      };
-      dispatch({ type: "ADD_PLEDGE", pledge });
-      notify({ title: "Support pledged", description: "The team and the community have been notified.", tone: "success" });
-      return pledge;
+    const pledgeSupport = async (problemId: string, input: { type: PledgeType; amount?: number; details: string }) => {
+      if (!requireUser("organization")) return null;
+      let created: Pledge | null = null;
+      await apply(actions.pledgeSupport(problemId, input), (r, next) => {
+        created = next.state.pledges.find((p) => p.id === r.id) ?? null;
+        return { title: "Support pledged", description: "The team and the community can see it now.", tone: "success" };
+      });
+      return created;
     };
 
     /* ---------- progress ---------- */
-    const postUpdate = (problemId: string, text: string) => {
-      const user = requireUser();
-      if (!user || !text.trim()) return;
-      dispatch({
-        type: "UPDATE_PROBLEM",
-        id: problemId,
-        patch: (p) => ({
-          updates: [...p.updates, { id: uid("up"), authorId: user.id, text: text.trim(), createdAt: new Date().toISOString() }],
-        }),
-      });
-      notify({ title: "Update posted", tone: "success" });
+    const postUpdate = async (problemId: string, text: string) => {
+      if (!requireUser() || !text.trim()) return;
+      await apply(actions.postUpdate(problemId, text), () => ({ title: "Update posted", tone: "success" }));
     };
 
-    const addMilestone = (problemId: string, title: string) => {
-      const user = requireUser();
-      if (!user || !title.trim()) return;
-      dispatch({
-        type: "UPDATE_PROBLEM",
-        id: problemId,
-        patch: (p) => ({ milestones: [...p.milestones, { id: uid("m"), title: title.trim(), done: false }] }),
-      });
+    const addMilestone = async (problemId: string, title: string) => {
+      if (!requireUser() || !title.trim()) return;
+      await apply(actions.addMilestone(problemId, title));
     };
 
-    const toggleMilestone = (problemId: string, milestoneId: string) => {
-      const user = requireUser();
-      if (!user) return;
-      dispatch({
-        type: "UPDATE_PROBLEM",
-        id: problemId,
-        patch: (p) => ({ milestones: p.milestones.map((m) => (m.id === milestoneId ? { ...m, done: !m.done } : m)) }),
-      });
+    const toggleMilestone = async (problemId: string, milestoneId: string) => {
+      if (!requireUser()) return;
+      await apply(actions.toggleMilestone(problemId, milestoneId));
     };
 
-    const startProject = (problemId: string) => {
-      const user = requireUser("student");
-      if (!user) return;
-      dispatch({ type: "UPDATE_PROBLEM", id: problemId, patch: { status: "in-progress" } });
-      notify({ title: "Project started", description: "Keep the community posted with updates.", tone: "success" });
+    const startProject = async (problemId: string) => {
+      if (!requireUser("student")) return;
+      await apply(actions.startProject(problemId), () => ({ title: "Project started", description: "Keep the community posted with updates.", tone: "success" }));
     };
 
-    const completeProject = (problemId: string) => {
-      const user = requireUser();
-      if (!user) return;
-      const problem = problemById(problemId);
-      if (!problem) return;
-      const teams = teamsForProblem(problemId);
-      const orgs = pledgesForProblem(problemId).map((p) => p.orgId);
-      const verifiedBy = orgs[0] ?? (user.role === "organization" ? user.id : "platform");
-      const issuedAt = new Date().toISOString();
-      const already = new Set(s.credentials.filter((c) => c.problemId === problemId).map((c) => c.userId));
-      const credentials: Credential[] = [];
-      for (const team of teams) {
-        for (const memberId of team.memberIds) {
-          if (already.has(memberId)) continue;
-          const member = userById(memberId);
-          const skills = (member?.skills ?? []).slice(0, 3);
-          credentials.push({
-            id: credentialId(),
-            userId: memberId,
-            problemId,
-            teamId: team.id,
-            role: team.memberRoles[memberId] ?? "Contributor",
-            skills: skills.length ? skills : problem.needs.slice(0, 2),
-            issuedAt,
-            verifiedBy,
-            hours: 60 + Math.floor(Math.random() * 90),
-          });
-        }
-      }
-      dispatch({
-        type: "UPDATE_PROBLEM",
-        id: problemId,
-        patch: (p) => ({
-          status: "completed",
-          completedAt: issuedAt,
-          milestones: p.milestones.map((m) => ({ ...m, done: true })),
-          updates: [
-            ...p.updates,
-            {
-              id: uid("up"),
-              authorId: user.id,
-              text: `Project marked complete. ${credentials.length} verified credential${credentials.length === 1 ? "" : "s"} issued to contributors.`,
-              createdAt: issuedAt,
-            },
-          ],
-        }),
-      });
-      if (credentials.length) dispatch({ type: "ADD_CREDENTIALS", credentials });
-      notify({
+    const completeProject = async (problemId: string) => {
+      if (!requireUser()) return;
+      await apply(actions.completeProject(problemId), (r) => ({
         title: "Project completed",
-        description: `${credentials.length} verified credential${credentials.length === 1 ? "" : "s"} issued.`,
+        description: `${r.issued} verified certificate${r.issued === 1 ? "" : "s"} issued.`,
         tone: "success",
-      });
+      }));
+    };
+
+    /* ---------- admin ---------- */
+    const reviewProblem = async (problemId: string, decision: "approved" | "rejected", note?: string) => {
+      if (!requireUser("admin")) return false;
+      const r = await apply(actions.reviewProblem(problemId, decision, note), () => ({
+        title: decision === "approved" ? "Problem approved" : "Problem declined",
+        description: decision === "approved" ? "It is now public." : "The submitter can see your note on their dashboard.",
+        tone: decision === "approved" ? "success" : "info",
+      }));
+      return r !== null;
     };
 
     return {
       state: s,
-      hydrated,
+      hydrated: true,
+      busy: inFlight > 0,
       currentUser,
       toasts,
       authOpen,
@@ -498,10 +287,10 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
       closeAuth,
       dismissToast,
       notify,
+      refresh,
       signIn,
-      signInAs,
+      signUp,
       signOut,
-      resetDemo,
       submitProblem,
       toggleUpvote,
       createTeam,
@@ -513,6 +302,7 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
       toggleMilestone,
       startProject,
       completeProject,
+      reviewProblem,
       userById,
       problemById,
       teamsForProblem,
@@ -524,7 +314,7 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
       canAct,
       isTeamMember,
     };
-  }, [data, hydrated, toasts, authOpen, authRole, openAuth, closeAuth, dismissToast, notify]);
+  }, [client, inFlight, toasts, authOpen, authRole, openAuth, closeAuth, dismissToast, notify, refresh, apply]);
 
   return <PlatformContext.Provider value={value}>{children}</PlatformContext.Provider>;
 }

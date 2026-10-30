@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
-import { ChevronDown, LayoutDashboard, LogOut, Menu, RefreshCcw, UserRound, X } from "lucide-react";
+import { ChevronDown, LayoutDashboard, LogOut, Menu, ShieldCheck, UserRound, X } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
@@ -19,10 +19,18 @@ const links = [
 ];
 
 export function Navbar() {
-  const { currentUser, openAuth, signOut, resetDemo, hydrated } = usePlatform();
+  const { currentUser, openAuth, signOut, hydrated } = usePlatform();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const userRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     if (!userOpen) return;
@@ -39,7 +47,12 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-line bg-paper/95 backdrop-blur-sm">
+    <header
+      className={cn(
+        "sticky top-0 z-50 border-b border-line bg-paper/95 backdrop-blur-sm transition-shadow duration-300",
+        scrolled && "shadow-[0_10px_30px_-24px_rgba(27,27,25,0.45)]",
+      )}
+    >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6">
         <div className="flex items-center gap-10">
           <Logo />
@@ -80,34 +93,20 @@ export function Navbar() {
                   <MenuItem href={`/contributors/${currentUser.id}`} onClick={closeAll} icon={<UserRound className="size-4" />}>
                     My profile
                   </MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      closeAll();
-                      openAuth();
-                    }}
-                    icon={<RefreshCcw className="size-4" />}
-                  >
-                    Switch account
-                  </MenuItem>
+                  {currentUser.role === "admin" && (
+                    <MenuItem href="/admin" onClick={closeAll} icon={<ShieldCheck className="size-4" />}>
+                      Review queue
+                    </MenuItem>
+                  )}
                   <div className="my-1 h-px bg-line" />
                   <MenuItem
                     onClick={() => {
                       closeAll();
-                      signOut();
+                      void signOut();
                     }}
                     icon={<LogOut className="size-4" />}
                   >
                     Sign out
-                  </MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      closeAll();
-                      resetDemo();
-                    }}
-                    icon={<RefreshCcw className="size-4" />}
-                    subtle
-                  >
-                    Reset demo data
                   </MenuItem>
                 </div>
               )}
@@ -127,12 +126,17 @@ export function Navbar() {
       </div>
 
       {menuOpen && (
-        <div className="border-t border-line bg-surface px-4 py-3 lg:hidden">
+        <div className="animate-fade-in border-t border-line bg-surface px-4 py-3 lg:hidden">
           {links.map((l) => (
             <Link key={l.href} href={l.href} onClick={closeAll} className="block rounded-md px-3 py-2.5 text-sm font-medium text-ink hover:bg-canvas">
               {l.label}
             </Link>
           ))}
+          {currentUser?.role === "admin" && (
+            <Link href="/admin" onClick={closeAll} className="block rounded-md px-3 py-2.5 text-sm font-medium text-ink hover:bg-canvas">
+              Review queue
+            </Link>
+          )}
           <div className="mt-3 flex gap-2 border-t border-line pt-3">
             <Link href="/submit" onClick={closeAll} className="inline-flex h-9 flex-1 items-center justify-center rounded-md border border-line-strong text-sm font-medium text-ink">
               Submit a problem
@@ -172,12 +176,17 @@ function NavLinks({ pathname, onNavigate }: { pathname: string | null; onNavigat
               href={l.href}
               onClick={onNavigate}
               className={cn(
-                "relative py-1 text-sm transition-colors",
+                "group relative py-1 text-sm transition-colors",
                 active ? "font-medium text-ink" : "text-ink-2 hover:text-ink",
               )}
             >
               {l.label}
-              {active && <span className="absolute inset-x-0 -bottom-[21px] h-0.5 bg-pine-700" />}
+              <span
+                className={cn(
+                  "absolute inset-x-0 -bottom-[21px] h-0.5 origin-left transition-transform duration-300 ease-out",
+                  active ? "scale-x-100 bg-pine-700" : "scale-x-0 bg-line-strong group-hover:scale-x-100",
+                )}
+              />
             </Link>
           </li>
         );

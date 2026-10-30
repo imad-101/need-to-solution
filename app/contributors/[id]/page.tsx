@@ -8,7 +8,13 @@ export const metadata: Metadata = {
 
 export default function ContributorPage({ params }: PageProps<"/contributors/[id]">) {
   return (
-    <Suspense fallback={<div className="mx-auto max-w-7xl px-4 pt-32 pb-24 sm:px-6"><div className="h-64 animate-pulse rounded-[2rem] bg-white/[0.03]" /></div>}>
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
+          <div className="h-48 animate-pulse rounded-lg bg-canvas" />
+        </div>
+      }
+    >
       {params.then(({ id }) => (
         <ContributorProfile id={id} />
       ))}
