@@ -133,7 +133,9 @@ export function VerifyCredential({ id }: { id: string }) {
                   </div>
                   <div>
                     <p className="label">Verify online</p>
-                    <p className="mt-1 break-all font-mono text-xs text-ink-2">needtosolution / verify / {credential.id}</p>
+                    <p className="mt-1 font-mono text-xs text-ink-2">
+                      /verify/<span className="whitespace-nowrap">{credential.id}</span>
+                    </p>
                   </div>
                 </div>
               </div>
